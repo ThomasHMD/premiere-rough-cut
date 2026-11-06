@@ -1,0 +1,54 @@
+{
+  "_doc": {
+    "code": "language code of this file",
+    "whisper_code": "code given to whisper (-l)",
+    "iso3": "ISO-639-3 code used for the romanization of the forced alignment (align_forced.py)",
+    "premiere_language": "language tag written in a Premiere JSON when the original has none",
+    "default_speaker_name": "speaker name used when the original Premiere JSON has no speaker",
+    "word_chars": "accented letters kept when words are compared (a-z and 0-9 are always kept)",
+    "lead_punct": "characters peeled off the start of a token as leading punctuation (build_subs.py)",
+    "trail_punct": "characters peeled off the end of a token as trailing punctuation (build_subs.py)",
+    "quote_char": "default quote mark put around titles of works",
+    "typography": "spacing rules of the language: default_on = applied unless corrections.json says otherwise; nbsp_before / nbsp_after = characters that get a no-break space before / after them; detached_punct = a token made only of these (plus . , ...) is glued back to the previous word",
+    "normalize_words": "spelling normalizations, each {pattern, base}: a match is replaced by base (keeps a final plural s and an initial capital); used when corrections.json has normalize_cotes",
+    "eos_closers": "characters allowed after . ! ? ... before the end of a word for it to still end a sentence",
+    "token_break_punct": "a whisper token starting with one of these starts a new word (transcribe.py)",
+    "empty_token_placeholder": "word used when a token is empty once punctuation is removed, to keep the 1:1 mapping in forced alignment",
+    "whisper_hallucinations": "lines whisper invents on silence; to delete with a seq_rule N->0 (reference list, not read by the scripts)"
+  },
+  "code": "fr",
+  "whisper_code": "fr",
+  "iso3": "fra",
+  "premiere_language": "fr-fr",
+  "default_speaker_name": "Inconnu",
+  "word_chars": "àâäéèêëïîôöùûüÿçœ",
+  "lead_punct": "«\"“‘(¿¡",
+  "trail_punct": ".,!?;:…»\"”’)",
+  "quote_char": "\"",
+  "typography": {
+    "default_on": true,
+    "nbsp_before": ";:!?»",
+    "nbsp_after": "«",
+    "detached_punct": "?!:;»"
+  },
+  "normalize_words": [
+    {
+      "pattern": "(?i)\\bsous[\\- ]?c[oô]tés?\\b",
+      "base": "sous-coté"
+    },
+    {
+      "pattern": "(?i)\\bsur[\\- ]?c[oô]tés?\\b",
+      "base": "surcoté"
+    }
+  ],
+  "eos_closers": "\"» ",
+  "token_break_punct": ".!?,:;«»",
+  "empty_token_placeholder": "euh",
+  "whisper_hallucinations": [
+    "Sous-titrage Société Radio-Canada",
+    "Merci d'avoir regardé",
+    "Merci d'avoir regardé cette vidéo.",
+    "Sous-titrage ST' 501",
+    "Sous-titres réalisés par la communauté d'Amara.org"
+  ]
+}

@@ -1,0 +1,15 @@
+# Generated outputs
+*.fcpxml
+*_Derush_v*.xml
+*_Derush_v*.report.md
+*_Derush_v*.log.txt
+
+# Work folders (kept next to the clip, in case some end up here)
+*_Derush_v*_work/
+work_*/
+*.wav
+
+# Tests
+tests/fixtures/*.mp4
+tests/fixtures/*.mov
+tests/output/

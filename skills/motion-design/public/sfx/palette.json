@@ -1,0 +1,410 @@
+{
+ "identite": "default palette",
+ "voixRef": -22.0,
+ "roles": {
+  "accent": -4.0,
+  "info": -9.0,
+  "texture": -14.0
+ },
+ "gamme": [
+  "C4",
+  "D4",
+  "E4",
+  "G4",
+  "A4",
+  "C5",
+  "D5",
+  "E5",
+  "G5",
+  "A5",
+  "C6",
+  "D6",
+  "E6"
+ ],
+ "sons": {
+  "note-C4.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -23.2,
+   "duree": 1.0
+  },
+  "note-D4.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -24.6,
+   "duree": 1.0
+  },
+  "note-E4.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -23.8,
+   "duree": 1.0
+  },
+  "note-G4.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -23.1,
+   "duree": 1.0
+  },
+  "note-A4.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -23.6,
+   "duree": 1.0
+  },
+  "note-C5.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -23.8,
+   "duree": 1.0
+  },
+  "note-D5.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -24.4,
+   "duree": 1.0
+  },
+  "note-E5.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -25.1,
+   "duree": 1.0
+  },
+  "note-G5.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -25.7,
+   "duree": 1.0
+  },
+  "note-A5.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -24.9,
+   "duree": 1.0
+  },
+  "note-C6.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -25.5,
+   "duree": 1.0
+  },
+  "note-D6.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -25.2,
+   "duree": 1.0
+  },
+  "note-E6.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "an element appears",
+   "niveau": -31.0,
+   "crete": -27.1,
+   "duree": 1.0
+  },
+  "accord.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "approval, last element, checkmark",
+   "niveau": -31.0,
+   "crete": -21.4,
+   "duree": 1.29
+  },
+  "question.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "a question is asked",
+   "niveau": -31.0,
+   "crete": -22.3,
+   "duree": 1.82
+  },
+  "notif.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "message, mail",
+   "niveau": -31.0,
+   "crete": -23.4,
+   "duree": 1.4
+  },
+  "sourd.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "a problem, a refusal",
+   "niveau": -31.0,
+   "crete": -20.1,
+   "duree": 0.75
+  },
+  "basse.wav": {
+   "role": "info",
+   "matiere": "keyboard",
+   "usage": "C pedal under a chapter card",
+   "niveau": -31.0,
+   "crete": -23.9,
+   "duree": 1.45
+  },
+  "signature.wav": {
+   "role": "accent",
+   "matiere": "keyboard",
+   "usage": "sound logo: opening, promise, ending",
+   "niveau": -26.0,
+   "crete": -15.3,
+   "duree": 2.85
+  },
+  "obturateur.wav": {
+   "role": "accent",
+   "matiere": "camera",
+   "usage": "capture, a number landing, hard cut",
+   "niveau": -26.0,
+   "crete": -12.8,
+   "duree": 0.7
+  },
+  "af.wav": {
+   "role": "info",
+   "matiere": "camera",
+   "usage": "the focus points lock",
+   "niveau": -31.0,
+   "crete": -18.0,
+   "duree": 0.57
+  },
+  "crans-court.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "short counter",
+   "niveau": -36.0,
+   "crete": -16.3,
+   "duree": 1.01
+  },
+  "crans.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "counter, progress bar",
+   "niveau": -36.0,
+   "crete": -17.4,
+   "duree": 1.41
+  },
+  "crans-long.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "timeline, long countdown",
+   "niveau": -36.0,
+   "crete": -18.1,
+   "duree": 2.11
+  },
+  "armement.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "just before a reveal",
+   "niveau": -36.0,
+   "crete": -20.6,
+   "duree": 0.95
+  },
+  "clic.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "mouse click in a demo",
+   "niveau": -36.0,
+   "crete": -17.3,
+   "duree": 0.59
+  },
+  "frappe.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "an address being typed",
+   "niveau": -36.0,
+   "crete": -19.2,
+   "duree": 1.33
+  },
+  "touche-1.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "a keyboard key in a demo",
+   "niveau": -36.0,
+   "crete": -17.7,
+   "duree": 0.48
+  },
+  "touche-2.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "a keyboard key in a demo",
+   "niveau": -36.0,
+   "crete": -16.3,
+   "duree": 0.48
+  },
+  "touche-3.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "a keyboard key in a demo",
+   "niveau": -36.0,
+   "crete": -17.2,
+   "duree": 0.48
+  },
+  "tampon-1.wav": {
+   "role": "accent",
+   "matiere": "paper",
+   "usage": "stamp, a word that slams",
+   "niveau": -26.0,
+   "crete": -15.2,
+   "duree": 0.81
+  },
+  "tampon-2.wav": {
+   "role": "accent",
+   "matiere": "paper",
+   "usage": "stamp, a word that slams",
+   "niveau": -26.0,
+   "crete": -15.3,
+   "duree": 0.81
+  },
+  "tampon-3.wav": {
+   "role": "accent",
+   "matiere": "paper",
+   "usage": "stamp, a word that slams",
+   "niveau": -26.0,
+   "crete": -15.6,
+   "duree": 0.81
+  },
+  "pose-1.wav": {
+   "role": "info",
+   "matiere": "paper",
+   "usage": "label, card, bubble being set down",
+   "niveau": -31.0,
+   "crete": -12.3,
+   "duree": 0.57
+  },
+  "pose-2.wav": {
+   "role": "info",
+   "matiere": "paper",
+   "usage": "label, card, bubble being set down",
+   "niveau": -31.0,
+   "crete": -12.4,
+   "duree": 0.57
+  },
+  "glisse-in.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "entry wipe, card arriving",
+   "niveau": -36.0,
+   "crete": -23.2,
+   "duree": 0.95
+  },
+  "glisse-out.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "exit wipe",
+   "niveau": -36.0,
+   "crete": -23.6,
+   "duree": 0.95
+  },
+  "page.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "moving on to the next scene",
+   "niveau": -36.0,
+   "crete": -23.7,
+   "duree": 0.69
+  },
+  "trait.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "an arrow, a stroke being drawn (0.6 s)",
+   "niveau": -36.0,
+   "crete": -25.9,
+   "duree": 1.05
+  },
+  "zoom-in.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "the camera moves in on a detail (0.9 s)",
+   "niveau": -36.0,
+   "crete": -26.0,
+   "duree": 1.35
+  },
+  "zoom-out.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "the camera pulls back to the full image (0.9 s)",
+   "niveau": -36.0,
+   "crete": -26.4,
+   "duree": 1.35
+  },
+  "zoom-in-07.wav": {
+   "role": "texture",
+   "matiere": "camera",
+   "usage": "zoom into a supporting shot (0.7 s)",
+   "niveau": -36.0,
+   "crete": -26.2,
+   "duree": 1.15
+  },
+  "pop-C5.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "an image appears (supporting shot: G; contact sheet: the scale climbs)",
+   "niveau": -36.0,
+   "crete": -19.6,
+   "duree": 0.51
+  },
+  "pop-D5.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "an image appears (supporting shot: G; contact sheet: the scale climbs)",
+   "niveau": -36.0,
+   "crete": -19.6,
+   "duree": 0.51
+  },
+  "pop-E5.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "an image appears (supporting shot: G; contact sheet: the scale climbs)",
+   "niveau": -36.0,
+   "crete": -19.6,
+   "duree": 0.51
+  },
+  "pop-G5.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "an image appears (supporting shot: G; contact sheet: the scale climbs)",
+   "niveau": -36.0,
+   "crete": -19.3,
+   "duree": 0.51
+  },
+  "pop-A5.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "an image appears (supporting shot: G; contact sheet: the scale climbs)",
+   "niveau": -36.0,
+   "crete": -19.5,
+   "duree": 0.51
+  },
+  "pop-C6.wav": {
+   "role": "texture",
+   "matiere": "paper",
+   "usage": "an image appears (supporting shot: G; contact sheet: the scale climbs)",
+   "niveau": -36.0,
+   "crete": -19.3,
+   "duree": 0.51
+  }
+ }
+}

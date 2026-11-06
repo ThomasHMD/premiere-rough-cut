@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.local
+out/
+animations-*/
+*.log
+.DS_Store

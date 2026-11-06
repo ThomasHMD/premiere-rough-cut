@@ -1,0 +1,85 @@
+{
+  "_doc": {
+    "code": "language code of this file",
+    "language_name": "name of the language, in English, written into the LLM prompt (llm_prompt_builder.py)",
+    "fillers": "filler sounds cut wherever they stand, confidence 0.95 (mechanical_cuts.py); a word listed here AND in sentence_start_fillers is cut everywhere",
+    "sentence_start_fillers": "fillers cut (confidence 0.85) only after a pause of 0.4 s or more, i.e. at the start of a sentence (mechanical_cuts.py)",
+    "false_start_triggers": "normalized phrases (lowercase, no punctuation) that open a window for the semantic analysis, never cut by themselves (mechanical_cuts.py)",
+    "slate_patterns": "regexes searched in the normalized text of the first 15 s: a match cuts everything up to the word after it (mechanical_cuts.py)",
+    "stop_words": "words that do not count as content: a repeated n-gram made only of them (or of words under 3 letters) drops to confidence 0.55 (mechanical_cuts.py)",
+    "correction_openers": "a sentence starting with one of these, right after a similar one, is read as a correction and lowers the rephrasing threshold (mechanical_cuts.py)",
+    "word_chars": "extra characters kept by normalize_word on top of \\w, apostrophe and hyphen (mechanical_cuts.py)",
+    "token_break_punct": "a whisper token starting with one of these starts a new word (transcribe.py)",
+    "orphan_connectors": "short connectors that, isolated right before a cut silence, are cut with it (reference list for the take selection in context, not read by the scripts)",
+    "openers": "openers cut at the start of a sentence (reference list for the take selection in context, not read by the scripts)",
+    "whisper_hallucinations": "lines whisper invents over silence: hear.py printing one means there is no word in the slice (reference list, not read by the scripts)",
+    "prompt_examples": "speech examples quoted in the semantic-analysis prompt (llm_prompt_builder.py)",
+    "reasons": "texts written into the reason field of the cuts (shown in the red markers and the reports), with the language's typography; {name} and {name:.2f} are filled by the scripts"
+  },
+  "code": "fr",
+  "language_name": "French",
+  "fillers": ["euh", "euhh", "heu", "hum", "hmm", "mh", "bah", "ben", "enfin"],
+  "sentence_start_fillers": ["ben", "enfin"],
+  "false_start_triggers": [
+    "attends", "attendez", "non non", "non pardon", "pardon",
+    "je reprends", "je recommence", "je refais",
+    "stop", "coupez", "coupe"
+  ],
+  "slate_patterns": [
+    "\\b(?:un|deux|trois|1|2|3)[\\s,]+(?:un|deux|trois|1|2|3)\\b",
+    "\\bon est bon\\b",
+    "\\bça tourne\\b",
+    "\\btest\\s+test\\b",
+    "\\bclap\\b",
+    "\\bgo\\s+go\\b",
+    "\\baction\\s+action\\b"
+  ],
+  "stop_words": [
+    "le", "la", "les", "un", "une", "des", "de", "du", "d'", "l'", "n'",
+    "et", "ou", "ni", "à", "au", "aux", "en", "y", "se", "s'",
+    "ce", "ça", "c'", "qu'", "que", "qui", "quoi",
+    "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
+    "me", "te", "lui", "leur", "moi", "toi", "soi",
+    "est", "pas", "ne", "non", "oui", "si", "mais",
+    "il y a", "y a"
+  ],
+  "correction_openers": ["non"],
+  "word_chars": "àâäéèêëîïôöùûüÿç",
+  "token_break_punct": ".!?,:;«»",
+  "orphan_connectors": ["Et", "Alors", "Donc", "Mais"],
+  "openers": ["Voilà,"],
+  "whisper_hallucinations": [
+    "Sous-titrage Société Radio-Canada",
+    "Merci d'avoir regardé",
+    "Merci d'avoir regardé cette vidéo.",
+    "Sous-titrage ST' 501",
+    "Sous-titres réalisés par la communauté d'Amara.org"
+  ],
+  "prompt_examples": {
+    "explicit_false_starts": ["attends je reprends", "non pardon", "je refais", "stop"],
+    "immediate_repetition": "je voulais... je voulais vous dire",
+    "rhetorical_repetition": "non, non, non, c'est pas vrai",
+    "rephrasing_with_content": "je veux dire, plus précisément...",
+    "reason": "Phrase commencée puis reformulée, marqueur 'attends non je reprends' à 47.5",
+    "matched_text": "Donc aujourd'hui je vais... attends non je reprends",
+    "context_before": "Bonjour à tous bienvenue",
+    "context_after": "Aujourd'hui je vais vous parler de"
+  },
+  "reasons": {
+    "filler": "Hésitation isolée : « {text} »",
+    "silence_acoustic": "Silence acoustique de {duration:.2f}s (snappé sur mots)",
+    "rephrasing": "Reformulation Jaccard={jaccard:.2f} (1re version)",
+    "slate": "Slate de tournage en début de rush",
+    "silence_head": "Silence de tête ({start:.1f}s)",
+    "silence_between_words": "Silence de {gap:.2f}s entre mots (whisper)",
+    "silence_tail": "Silence de queue ({duration:.1f}s)",
+    "repetition": "Répétition immédiate de « {text} » (N={n})",
+    "false_start_marker": "Marqueur de faux départ détecté : « {trigger} »",
+    "silence_noisy": "Silence {gap:.1f}s, {noise:.1f}s de bruit détecté (rire ? manip ?), à vérifier avant de couper",
+    "silence_notes": "Silence {gap:.1f}s (lecture de notes), validé RMS",
+    "clip_end": "Fin du rush après la dernière phrase",
+    "clip_start": "Début du rush avant la première phrase",
+    "isolated_sound_head": "Son isolé de {duration:.2f} s en tête de clip, après un blanc : bout de prise ratée ou mot voulu ? À garder ou non",
+    "isolated_sound_tail": "Son isolé de {duration:.2f} s en queue de clip, après un blanc : bout de prise ratée ou mot voulu ? À garder ou non"
+  }
+}

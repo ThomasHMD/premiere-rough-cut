@@ -1,0 +1,51 @@
+{
+  "name": "motion-design",
+  "version": "0.1.0",
+  "description": "Remotion workshop of premiere-rough-cut: scenes, lower thirds, site demos, fonts and sounds",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts",
+    "still": "remotion still src/index.ts",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.1",
+    "@remotion/animation-utils": "4.0.529",
+    "@remotion/bundler": "4.0.529",
+    "@remotion/captions": "4.0.529",
+    "@remotion/cli": "4.0.529",
+    "@remotion/effects": "4.0.529",
+    "@remotion/fonts": "4.0.529",
+    "@remotion/google-fonts": "4.0.529",
+    "@remotion/gsap": "4.0.529",
+    "@remotion/layout-utils": "4.0.529",
+    "@remotion/light-leaks": "4.0.529",
+    "@remotion/lottie": "4.0.529",
+    "@remotion/media": "4.0.529",
+    "@remotion/media-utils": "4.0.529",
+    "@remotion/motion-blur": "4.0.529",
+    "@remotion/noise": "4.0.529",
+    "@remotion/paths": "4.0.529",
+    "@remotion/renderer": "4.0.529",
+    "@remotion/rough-notation": "4.0.529",
+    "@remotion/shapes": "4.0.529",
+    "@remotion/starburst": "4.0.529",
+    "@remotion/three": "4.0.529",
+    "@remotion/transitions": "4.0.529",
+    "@types/three": "0.186.0",
+    "gsap": "3.15.0",
+    "lottie-web": "^5.13.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.529",
+    "three": "0.186.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

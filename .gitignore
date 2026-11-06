@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.pyc
+node_modules
+.cache/
+.env
+*_work/
+skills/motion-design/public/grain.png
+skills/motion-design/out/

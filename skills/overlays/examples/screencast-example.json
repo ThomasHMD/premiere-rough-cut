@@ -1,0 +1,49 @@
+{
+  "url": "https://en.wikipedia.org/wiki/Photography",
+  "viewport": [
+    1440,
+    810
+  ],
+  "dpr": 2,
+  "slow": 4,
+  "rushStart": 0,
+  "hide": [
+    "#siteNotice",
+    "#centralNotice"
+  ],
+  "render": {
+    "fps": 30,
+    "background": "dark"
+  },
+  "steps": [
+    {
+      "do": "wait",
+      "sec": 1.6,
+      "eyebrow": "Example",
+      "caption": "A public page"
+    },
+    {
+      "do": "focus",
+      "target": "#firstHeading",
+      "sec": 2.4,
+      "spotlight": true
+    },
+    {
+      "do": "focus",
+      "target": ".mw-parser-output > p",
+      "sec": 2.4,
+      "caption": "The intro paragraph"
+    },
+    {
+      "do": "scroll",
+      "to": "#History",
+      "block": "start",
+      "sec": 1.4
+    },
+    {
+      "do": "wait",
+      "sec": 1.6,
+      "caption": "The wanted section"
+    }
+  ]
+}
