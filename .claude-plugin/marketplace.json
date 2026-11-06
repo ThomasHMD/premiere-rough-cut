@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "premiere-rough-cut",
+  "description": "Talking-head editing for Adobe Premiere Pro with Claude Code.",
+  "owner": {
+    "name": "Thomas Hammoudi",
+    "url": "https://github.com/ThomasHMD"
+  },
+  "plugins": [
+    {
+      "name": "premiere-rough-cut",
+      "source": "./",
+      "description": "Cut retakes into an editable Premiere sequence, fix captions, place overlays word by word.",
+      "category": "creative",
+      "tags": ["premiere-pro", "video-editing", "rough-cut", "whisper", "remotion"]
+    }
+  ]
+}

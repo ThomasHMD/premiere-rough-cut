@@ -1,0 +1,81 @@
+{
+  "_doc": {
+    "code": "language code of this file",
+    "language_name": "name of the language, in English, written into the LLM prompt (llm_prompt_builder.py)",
+    "fillers": "filler sounds cut wherever they stand, confidence 0.95 (mechanical_cuts.py); a word listed here AND in sentence_start_fillers is cut everywhere",
+    "sentence_start_fillers": "fillers cut (confidence 0.85) only after a pause of 0.4 s or more, i.e. at the start of a sentence (mechanical_cuts.py)",
+    "false_start_triggers": "normalized phrases (lowercase, no punctuation) that open a window for the semantic analysis, never cut by themselves (mechanical_cuts.py)",
+    "slate_patterns": "regexes searched in the normalized text of the first 15 s: a match cuts everything up to the word after it (mechanical_cuts.py)",
+    "stop_words": "words that do not count as content: a repeated n-gram made only of them (or of words under 3 letters) drops to confidence 0.55 (mechanical_cuts.py)",
+    "correction_openers": "a sentence starting with one of these, right after a similar one, is read as a correction and lowers the rephrasing threshold (mechanical_cuts.py)",
+    "word_chars": "extra characters kept by normalize_word on top of \\w, apostrophe and hyphen (mechanical_cuts.py)",
+    "token_break_punct": "a whisper token starting with one of these starts a new word (transcribe.py)",
+    "orphan_connectors": "short connectors that, isolated right before a cut silence, are cut with it (reference list for the take selection in context, not read by the scripts)",
+    "openers": "openers cut at the start of a sentence (reference list for the take selection in context, not read by the scripts)",
+    "whisper_hallucinations": "lines whisper invents over silence: hear.py printing one means there is no word in the slice (reference list, not read by the scripts)",
+    "prompt_examples": "speech examples quoted in the semantic-analysis prompt (llm_prompt_builder.py)",
+    "reasons": "texts written into the reason field of the cuts (shown in the red markers and the reports), with the language's typography; {name} and {name:.2f} are filled by the scripts"
+  },
+  "code": "en",
+  "language_name": "English",
+  "fillers": ["um", "uh", "uhm", "er", "erm", "hmm", "mm", "ah"],
+  "sentence_start_fillers": ["well"],
+  "false_start_triggers": [
+    "wait", "hold on", "no no", "sorry",
+    "let me start again", "let me start over", "let me redo that", "let me try again",
+    "sorry again", "scratch that", "take two", "start over",
+    "stop"
+  ],
+  "slate_patterns": [
+    "\\b(?:one|two|three|1|2|3)[\\s,]+(?:one|two|three|1|2|3)\\b",
+    "\\b(?:we're|we are|it's|camera's) rolling\\b",
+    "\\btest\\s+test\\b",
+    "\\bclap\\b",
+    "\\bgo\\s+go\\b",
+    "\\baction\\s+action\\b"
+  ],
+  "stop_words": [
+    "the", "a", "an", "of", "to", "in", "on", "at", "for", "and", "or", "nor", "but", "so",
+    "it", "it's", "is", "are", "was", "be", "this", "that", "what", "who", "there", "there's",
+    "i", "i'm", "you", "he", "she", "we", "they", "me", "him", "her", "us", "them", "his", "its",
+    "not", "no", "yes", "yeah", "do", "if"
+  ],
+  "correction_openers": ["no,", "no.", "no ", "sorry"],
+  "word_chars": "",
+  "token_break_punct": ".!?,:;",
+  "orphan_connectors": ["And", "So", "But", "Then"],
+  "openers": ["So,", "Well,", "Okay,", "Alright,"],
+  "whisper_hallucinations": [
+    "Thank you for watching.",
+    "Thanks for watching!",
+    "Subtitles by the Amara.org community",
+    "Please subscribe to my channel."
+  ],
+  "prompt_examples": {
+    "explicit_false_starts": ["wait, let me start again", "no sorry", "let me redo that", "stop"],
+    "immediate_repetition": "I wanted... I wanted to tell you",
+    "rhetorical_repetition": "no, no, no, that's not true",
+    "rephrasing_with_content": "I mean, more precisely...",
+    "reason": "Sentence started then rephrased, marker 'wait no let me start again' at 47.5",
+    "matched_text": "So today I'm going to... wait no let me start again",
+    "context_before": "Hi everyone and welcome",
+    "context_after": "Today I'm going to talk about"
+  },
+  "reasons": {
+    "filler": "Isolated filler: \"{text}\"",
+    "silence_acoustic": "Acoustic silence of {duration:.2f}s (snapped to words)",
+    "rephrasing": "Rephrasing Jaccard={jaccard:.2f} (first version)",
+    "slate": "Take slate at the start of the clip",
+    "silence_head": "Leading silence ({start:.1f}s)",
+    "silence_between_words": "Silence of {gap:.2f}s between words (whisper)",
+    "silence_tail": "Trailing silence ({duration:.1f}s)",
+    "repetition": "Immediate repetition of \"{text}\" (N={n})",
+    "false_start_marker": "False-start marker detected: \"{trigger}\"",
+    "silence_noisy": "Silence {gap:.1f}s, {noise:.1f}s of noise detected (laugh? handling?), check before cutting",
+    "silence_notes": "Silence {gap:.1f}s (reading notes), RMS-checked",
+    "clip_end": "End of the clip after the last sentence",
+    "clip_start": "Start of the clip before the first sentence",
+    "isolated_sound_head": "Isolated {duration:.2f} s sound at the head of the clip, after a gap: leftover of a failed take or an intended word? Keep it or not",
+    "isolated_sound_tail": "Isolated {duration:.2f} s sound at the tail of the clip, after a gap: leftover of a failed take or an intended word? Keep it or not"
+  }
+}

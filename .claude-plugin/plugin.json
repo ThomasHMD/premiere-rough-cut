@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "premiere-rough-cut",
+  "displayName": "Premiere Rough Cut",
+  "version": "2.0.0",
+  "description": "Talking-head editing for Adobe Premiere Pro with Claude Code: retakes, false starts and fillers cut into an editable Premiere sequence, captions fixed, overlays and sound effects placed word by word.",
+  "author": {
+    "name": "Thomas Hammoudi",
+    "url": "https://github.com/ThomasHMD"
+  },
+  "homepage": "https://github.com/ThomasHMD/premiere-rough-cut",
+  "repository": "https://github.com/ThomasHMD/premiere-rough-cut",
+  "license": "MIT",
+  "keywords": ["premiere-pro", "video-editing", "rough-cut", "retakes", "whisper", "subtitles", "remotion", "talking-head", "youtube"]
+}

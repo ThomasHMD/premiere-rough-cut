@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "title": "Example: Project notebook, accent as a signal",
+  "segments": [
+    {
+      "type": "section-title",
+      "durationSec": 4,
+      "timecode": "00:42",
+      "note": "the speaker introduces the first chapter",
+      "data": {
+        "eyebrow": "Chapter 1",
+        "title": "An approach, not a style"
+      }
+    },
+    {
+      "type": "lower-third",
+      "kind": "lower-third-nom",
+      "durationSec": 6,
+      "timecode": "01:24",
+      "note": "First mention of Saul Leiter",
+      "data": {
+        "name": "Saul Leiter",
+        "years": "1923-2013",
+        "tag": "New York School"
+      }
+    },
+    {
+      "type": "motion",
+      "component": "quote-full",
+      "durationSec": 12,
+      "timecode": "02:14",
+      "note": "Pivotal quote of chapter 1",
+      "data": {
+        "text": "A picture is worth a thousand words, if you know how to look at it.",
+        "author": "Example",
+        "source": "Kit demo"
+      }
+    },
+    {
+      "type": "lower-third",
+      "kind": "lower-third-oeuvre",
+      "durationSec": 6,
+      "timecode": "02:32",
+      "note": "Reference to the book the speaker cites",
+      "data": {
+        "title": "Early Color",
+        "author": "Saul Leiter",
+        "year": "2006"
+      }
+    },
+    {
+      "type": "section-title",
+      "durationSec": 4,
+      "timecode": "04:02",
+      "note": "Switch to chapter 2",
+      "data": {
+        "eyebrow": "Chapter 2",
+        "title": "Accent as a signal"
+      }
+    },
+    {
+      "type": "lower-third",
+      "kind": "lower-third-lieu",
+      "durationSec": 6,
+      "timecode": "05:18",
+      "note": "the speaker tells a scene in Marrakech",
+      "data": {
+        "place": "Marrakech",
+        "date": "October 2019"
+      }
+    },
+    {
+      "type": "lower-third",
+      "kind": "lower-third-term",
+      "durationSec": 6,
+      "timecode": "06:01",
+      "note": "Core concept: the signal color",
+      "data": {
+        "term": "Signal color",
+        "subtitle": "A color that anchors the eye before the composition takes over"
+      }
+    }
+  ]
+}
