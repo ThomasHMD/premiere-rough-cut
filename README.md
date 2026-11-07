@@ -86,5 +86,5 @@ requests welcome.
 MIT for the code and the documentation, see [LICENSE](LICENSE). Bundled fonts are under the SIL Open Font License,
 details in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
 
-I'm Thomas Hammoudi, a photographer who makes YouTube videos in French ([thomashammoudi.com](https://www.thomashammoudi.com)).
+I'm Thomas Hammoudi, a photographer who makes YouTube videos in French ([dev.thomashammoudi.com](https://dev.thomashammoudi.com)).
 I built this for my own channel, where it halves the time I spend cutting a video, and I'm sharing it as it is.
