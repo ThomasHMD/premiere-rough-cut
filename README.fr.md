@@ -51,5 +51,5 @@ MIT pour le code et la documentation ([LICENSE](LICENSE)). Polices sous licence 
 ([THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)). Remotion est gratuit jusqu'à 3 salariés, licence entreprise
 au-delà.
 
-Je suis Thomas Hammoudi, photographe et vidéaste ([thomashammoudi.com](https://www.thomashammoudi.com)). J'ai construit
+Je suis Thomas Hammoudi, photographe et vidéaste ([dev.thomashammoudi.com](https://dev.thomashammoudi.com)). J'ai construit
 ce kit pour ma chaîne, où il divise par deux le temps de dérush, et je le partage tel quel.
