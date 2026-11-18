@@ -1,3 +1,5 @@
+**English** | [Français](README.fr.md)
+
 # premiere-rough-cut
 
 **Claude Code skills that rough-cut talking-head footage straight into Adobe Premiere Pro.** Retakes, false starts,
