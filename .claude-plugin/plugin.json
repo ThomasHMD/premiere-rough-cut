@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "premiere-rough-cut",
   "displayName": "Premiere Rough Cut",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "description": "Talking-head editing for Adobe Premiere Pro with Claude Code: retakes, false starts and fillers cut into an editable Premiere sequence, captions fixed, overlays and sound effects placed word by word.",
   "author": {
     "name": "Thomas Hammoudi",

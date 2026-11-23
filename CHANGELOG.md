@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1
+
+- **Plugin version**: `plugin.json` now says 2.1.1 (2.1.0 still announced 2.0.0, so `/plugin` did not offer the update).
+- **`perceptual-scale` is no longer a rule**: Remotion interpolates the area (scale squared), so a zoom starts fast and settles; the 2.1.0 note said the opposite. It stays as a style option in `motion-design/SKILL.md`.
+- WhisperX note made precise: one 47 s French clip, alignment step only.
+
 ## 2.1.0
 
 **rough-cut**
@@ -22,7 +28,7 @@
 **motion-design**
 - Font loaders now fail the render with `cancelRender` instead of silently falling back to a substitute font.
 - New "Nocturne" scenes: `nt-exif`, `nt-correction`, `nt-note`.
-- Workshop rules from the official Remotion skills: `<Img>` instead of `<img>`, several key frames in one bundle with `--frames`, `perceptual-scale` for new animated zooms.
+- Workshop rules from the official Remotion skills: `<Img>` instead of `<img>`, several key frames in one bundle with `--frames`, `perceptual-scale` for new animated zooms (corrected in 2.1.1).
 
 ## 2.0.0
 
