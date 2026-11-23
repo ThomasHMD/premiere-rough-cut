@@ -17,7 +17,7 @@ import { theme } from "../theme";
 export type Carte = [number, number, number, number]; // x0, y0, x1, y1 in canvas pixels
 
 export type FondAnimeProps = {
-  variante: "papier" | "nuit" | "brume";
+  variante: "papier" | "nuit" | "brume" | "nocturne";
   mode: "fond" | "ombre" | "coins";
   cartes: Carte[];
   rayon: number;
@@ -61,6 +61,20 @@ const PALETTES: Record<FondAnimeProps["variante"], Palette> = {
     traitAccent: "rgba(47,91,234,0.42)",
     ombre: "0 70px 160px rgba(28,28,36,0.30), 0 18px 40px rgba(28,28,36,0.16)",
     grain: 0.05,
+  },
+  // "Nocturne" look: the blue night of the nt-* scenes, sodium halos, a mercury glow; no red
+  nocturne: {
+    base: "linear-gradient(160deg, #121A2C 0%, #0D1220 50%, #080B14 100%)",
+    taches: [
+      { x: 0.2, y: 0.18, r: 0.45, ax: 0.07, ay: 0.05, m: 1, n: 1, ph: 0.0, col: "rgba(242,163,60,0.13)" },
+      { x: 0.84, y: 0.8, r: 0.5, ax: 0.06, ay: 0.05, m: 1, n: 2, ph: 1.7, col: "rgba(127,166,217,0.10)" },
+      { x: 0.6, y: 0.22, r: 0.34, ax: 0.08, ay: 0.04, m: 2, n: 1, ph: 3.1, col: "rgba(18,26,44,0.55)" },
+      { x: 0.28, y: 0.88, r: 0.3, ax: 0.05, ay: 0.03, m: 1, n: 1, ph: 4.4, col: "rgba(242,163,60,0.08)" },
+    ],
+    trait: "rgba(232,226,212,0.06)",
+    traitAccent: "rgba(242,163,60,0.32)",
+    ombre: "0 80px 180px rgba(0,0,0,0.55), 0 20px 40px rgba(0,0,0,0.30)",
+    grain: 0.06,
   },
   nuit: {
     base: `linear-gradient(160deg, #262628 0%, ${C.darkBg} 50%, #0E0E0E 100%)`,

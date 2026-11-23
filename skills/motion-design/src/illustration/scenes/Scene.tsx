@@ -8,6 +8,7 @@ import * as P from "./preuves";
 import * as M from "./murs";
 import * as MXS from "./matrix";
 import * as OF from "./offre";
+import * as NO from "./nocturne";
 
 // "Scene" composition: one scene = a component + its content (`data`) + its
 // moments (`cues`, in seconds from the start of the scene). Rendered on its own by
@@ -71,6 +72,13 @@ export const OPAQUE: Record<string, React.FC<O.SceneProps>> = {
   // a video: the offer, in the design system (after the terminal switches off)
   "offre-boitiers": OF.OffreBoitiers,
   "offre-lien": OF.OffreLien,
+  // "Nocturne" look, module nocturne.tsx
+  "nt-photo": NO.NtPhoto,
+  "nt-pose": NO.NtPose,
+  "nt-mur": NO.NtMur,
+  "nt-citation": NO.NtCitation,
+  "nt-fiche": NO.NtFiche,
+  "nt-titre": NO.NtTitre,
 };
 
 export const ALPHA: Record<string, React.FC<O.SceneProps>> = {
@@ -87,6 +95,10 @@ export const ALPHA: Record<string, React.FC<O.SceneProps>> = {
   sondages: M.Sondages,
   gaufre: M.Gaufre,
   croyance: M.Croyance,
+  // overlays of the "Nocturne" look
+  "nt-exif": NO.NtExif,
+  "nt-correction": NO.NtCorrection,
+  "nt-note": NO.NtNote,
 };
 
 export const sceneDefaults: SceneCompProps = {

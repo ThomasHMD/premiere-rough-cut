@@ -773,6 +773,7 @@ def build_xml(rush: Path, rendered: list[dict], sfx_clips: list[dict],
         ntsc = "TRUE" if meta["ntsc"] else "FALSE"
         tc_sep = ";" if meta["ntsc"] else ":"
         clip_id = f"clip_{track_index}_{idx}"
+        rt = (1001 / 1000) if item.get("ntsc_in") else 1.0   # excerpt of a 29.97 media: <in> counted in NTSC 30 (see broll_clips)
         # b-roll whose ratio differs from the sequence (16:9 in a 9:16 reel):
         # fit-cover to fill the frame without black bars.
         cover = ""
@@ -825,14 +826,14 @@ def build_xml(rush: Path, rendered: list[dict], sfx_clips: list[dict],
           <duration>{media_dur_seq}</duration>
           <rate>
             <timebase>{fps}</timebase>
-            <ntsc>FALSE</ntsc>
+            <ntsc>{"TRUE" if item.get("ntsc_in") else "FALSE"}</ntsc>
           </rate>
           <start>{start}</start>
           <end>{end}</end>
           <in>{in_pt}</in>
           <out>{out_pt}</out>
-          <pproTicksIn>{ticks(in_pt, fps)}</pproTicksIn>
-          <pproTicksOut>{ticks(out_pt, fps)}</pproTicksOut>
+          <pproTicksIn>{round(ticks(in_pt, fps) * rt)}</pproTicksIn>
+          <pproTicksOut>{round(ticks(out_pt, fps) * rt)}</pproTicksOut>
           <alphatype>{alphatype}</alphatype>
           <pixelaspectratio>square</pixelaspectratio>
           <anamorphic>FALSE</anamorphic>
@@ -1465,8 +1466,11 @@ def main():
                 "fit_cover": aspect_diff,
                 "motion": broll.get("motion"),
                 "_dispo": dispo,
-                # <in> of the clip, in frames at the clip's rate (fps, non-NTSC): pproTicksIn = in_sec exactly
-                **({"in_frame": round(in_sec * fps)} if in_sec else {}),
+                # <in> of the clip. Premiere reads it at the media's REAL rate: on a 29.97 media (page-turning footage of
+                # a book filmed on the same camera), counted in plain 30 it landed 50 to 130 ms too far
+                # (garde_premiere CADENCE); counted in NTSC 30 like the rush zooms, clip in ntsc TRUE.
+                **({"in_frame": round(in_sec * fps * (1000 / 1001 if bmeta["ntsc"] else 1.0)), "ntsc_in": bmeta["ntsc"]}
+                   if in_sec else {}),
             })
             # a site demo arrives with its sounds (clicks, keys): <file>.sons.json
             sons_json = broll_file.with_suffix(".sons.json")

@@ -1278,7 +1278,7 @@ export const Croyance: React.FC<SceneProps> = ({ data, cues }) => {
   const s = sp(at, { damping: 14, stiffness: 170 });
   const lignes: string[] = data?.lignes ?? [];
   const left = data?.side !== "right";
-  const w = data?.width ?? 540;
+  const w = data?.w ?? data?.width ?? 540;   // zone_libre.py sets "w" (shrunk cards pushed 60 px to the right)
   const size = data?.size ?? 62;
   const vs = sp(cv, { damping: 11, stiffness: 210 });
   return (

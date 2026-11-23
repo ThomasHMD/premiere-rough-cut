@@ -14,6 +14,8 @@ One-time setup: see `INSTALL.md` at the kit root. With the plugin, the setup lin
 folders copied side by side into `~/.claude/skills/`), run `bash install.sh` from the kit root.
 Scripts live in this skill's `scripts/` folder. This skill points to the other one as `../rough-cut/...`.
 
+> WhisperX was measured against this pipeline (whisper.cpp + forced CTC alignment): word boundaries within 34 ms median, so it is not used.
+
 ## What the skill does
 
 Premiere generates an automatic transcript (a `.json` export) that is often full of typos, above all on

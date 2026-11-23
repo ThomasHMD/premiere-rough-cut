@@ -6,7 +6,11 @@
 Renders every scene of the script end to end in the "ControleTexte" composition (motion-design,
 src/illustration/controle.tsx), one frame out of `--pas` (10 by default, 1/3 s), very small, and reads
 the report each frame writes to the console. Blocking (exit code 1) on (tags kept as the composition writes them):
-  DEBORDE    text goes outside the frame (e.g. a date running off the edge of a retro-screen card);
+  DEBORDE    text goes outside the frame (e.g. a date running off the edge of a retro-screen card); except an
+             entrance sliding in from the edge (card, label: 180 to 200 px in 0.2 s): an overflow to the left or
+             right seen on a single sampled frame, within ENTREE_DEBORDE s after the start of the scene or one of
+             its cues, is tolerated (a label once sampled by chance mid-entrance, while every card on the right
+             has always entered that way);
   MORD       text straddles the edge of a drawn shape (e.g. a caption on the slanted side of a trapezoid);
   CHEVAUCHE  two texts on top of each other;
   COUPE      text clipped by a mask (a screen, a card, the frame) for COUPE_MIN s or until the end
@@ -39,6 +43,7 @@ LECTURE_BASE = 0.5  # … plus the time to rest the eyes on it
 LECTURE_MIN = 1.5
 LECTURE_FIN = 1.0   # the whole sentence stays at least 1 s after its last letter
 LECTURE_MARGE = 0.15  # added to the wanted duration written in <base>_lecture.json
+ENTREE_DEBORDE = 0.5  # an overlay sliding in from the edge may overflow it during its entrance (one sampled frame)
 COUPE_MIN = 1.0     # text clipped for less time is an animated entrance (a chapter number rising behind its mask)
 
 
@@ -105,14 +110,25 @@ def main():
         for x in releves:
             print(json.dumps(x, ensure_ascii=False))
     vus, fautes = set(), []
-    par_scene = {}
+    par_scene, debordes = {}, {}
     for x in sorted(releves, key=lambda x: (x["debut"], x["t"])):
         par_scene.setdefault((x["id"], x["debut"]), []).append(x)
         for f in x["fautes"]:
             cle = (x["id"], re.sub(r" \([^()]*\)$", "", re.sub(r"« (.{12}).*?»", r"« \1", f)))  # fr-ok: guillemets written by controle.tsx
+            if f.startswith("DEBORDE"):   # decided once every frame has been seen: the sliding entrance is tolerated
+                debordes.setdefault(cle, []).append((x, f))
+                continue
             if cle not in vus:
                 vus.add(cle)
                 fautes.append(f"{x['id']} at {x['t']:.1f} s: {f}")
+    reperes = {s["id"]: [0.0] + [c for c in s["cues"] if c is not None] for s in scenes}
+    for (sid, _), vu in debordes.items():
+        x, f = vu[0]
+        m = re.search(r"\((-?\d+), (-?\d+), (\d+) × (\d+)\)$", f)  # fr-ok: the × is written by controle.tsx
+        lateral = bool(m) and int(m[2]) >= -4 and int(m[2]) + int(m[4]) <= 1084
+        entree = any(0 <= x["t"] - c <= ENTREE_DEBORDE for c in reperes.get(sid, [0.0]))
+        if not (len(vu) == 1 and lateral and entree):
+            fautes.append(f"{sid} at {x['t']:.1f} s: {f}" + (f" ({len(vu)} frames sampled)" if len(vu) > 1 else ""))
     durees = {s["id"]: s["durationSec"] for s in scenes}
     lecture = {}   # id: duration the scene would need for each sentence to be readable
     for (sid, debut), xs in par_scene.items():

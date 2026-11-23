@@ -4,6 +4,7 @@ import {
   Sequence,
   useVideoConfig,
   delayRender,
+  cancelRender,
   continueRender,
   staticFile,
   Img,
@@ -43,10 +44,7 @@ export const BrandedVideo: React.FC<AnimationScript> = (props) => {
   useEffect(() => {
     loadFonts()
       .then(() => continueRender(handle))
-      .catch((e) => {
-        console.error("Font load error", e);
-        continueRender(handle);
-      });
+      .catch((e) => cancelRender(new Error(`Font failed to load: ${String(e)}`)));
   }, [handle]);
 
   let cursor = 0;

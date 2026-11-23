@@ -22,7 +22,9 @@ a = ap.parse_args()
 
 
 def mmss(t):
-    return f"{int(t // 60):02d}:{t % 60:04.1f}"
+# round BEFORE splitting: otherwise 959.98 s comes out as "15:60.0" (seen on a real video)
+    d = round(t, 1)
+    return f"{int(d // 60):02d}:{d % 60:04.1f}"
 
 
 rows, flags, head = [], [], []
@@ -70,7 +72,14 @@ for wd in a.work:
     tot_rush += DUR
     n_clips += len(keep)
 
-md = [f"# Rough cut v1: {a.title}", "",
+# the version comes from the meta.json of the first work folder (it used to be hard-coded
+# to "v1", which put "Rough cut v1" at the top of a v2 report)
+_v = 1
+try:
+    _v = json.loads((Path(a.work[0]) / "meta.json").read_text()).get("version", 1)
+except Exception:
+    pass
+md = [f"# Rough cut v{_v}: {a.title}", "",
       f"- Footage: {tot_rush / 60:.1f} min. Edit: **{offset / 60:.1f} min**, {n_clips} clips, one single sequence.",
       *head,
       f"- {n_takes} failed or repeated takes removed ({tot_cut_takes:.0f} s), the rest is silences of reading notes.",

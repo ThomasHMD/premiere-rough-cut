@@ -246,6 +246,49 @@ def boite(comp, d):
         h = 44 + s * 1.15 + 10 + 96 + 12
         x1 = W - d.get("right", 90)
         return [x1 - w - 8, H - d.get("bottom", 120) - h, x1 + 8, H - d.get("bottom", 120) + 12]   # shadow
+    # --- "Nocturne" look: overlays placed ON THE LEFT, the head is center-right
+    # in this shoot (measured zone: x 690 to 1405). Each one is anchored by one edge.
+    if comp == "nt-exif":
+        e = d.get("expo") or {}
+        lignes = [v for v in (e.get("pose"), e.get("ouverture"), e.get("iso")) if v]
+        t = d.get("size", 32)
+        if d.get("ligne"):   # banner: settings side by side, placed by `top`
+            cles = [k for k, v in zip(("Exposure", "Aperture", "ISO"), (e.get("pose"), e.get("ouverture"), e.get("iso"))) if v]  # on-screen labels of the nt-exif composition (nocturne.tsx)
+            w = sum(largeur(k, t * 0.72, "mono", 400, False, espacement=0.08, majuscules=True) + 16 + largeur(v, t * 1.12, "mono", 400, False)
+                    for k, v in zip(cles, lignes)) + 40 * (len(lignes) - 1)
+            if e.get("note"):
+                w += 40 + largeur(e["note"], t * 0.96, "sans", 500, False)
+            w += 64 + 4
+            x0 = d.get("left", 110)
+            return [x0 - OMBRE_CARTE, d["top"], x0 + w, d["top"] + 44 + t * 1.12 * 1.25 + 8]
+        wv = max([largeur(f"{k}  {v}", t, "mono", 400, False)
+                  for k, v in zip(("Exposure", "Aperture", "ISO"), lignes)] or [0])  # on-screen labels of the nt-exif composition (nocturne.tsx)
+        if e.get("note"):
+            wv = max(wv, largeur(e["note"], t * 0.96, "sans", 500, False))
+        if d.get("surtitre"):
+            wv = max(wv, largeur(d["surtitre"], 26, "sans", 500, False, espacement=0.14, majuscules=True))
+        w = wv + 76 + 4
+        h = 60 + (42 if d.get("surtitre") else 0) + len(lignes) * (t * 1.12 + 8) + (14 + t * 1.3 if e.get("note") else 0)
+        bas = H - d.get("bottom", 150)
+        x0 = W - d["right"] - w if "right" in d else d.get("left", 110)
+        return [x0 - OMBRE_CARTE, bas - h, x0 + w, bas + 8]
+    if comp == "nt-correction":
+        x, w = d.get("left", 110), d.get("w", 560)
+        wd = largeur(d["dit"], 48, "sans", 500, False) + 72
+        sj = d.get("size", 72)
+        wj = largeur(d["juste"], sj, "display", 300, True) + 72
+        wc = max(w, wd, wj)
+        h = 60 + 48 * 1.2 + 14 + sj * 1.05 + (12 + 28 * 1.3 if d.get("note") else 0)
+        return [x - OMBRE_CARTE, d.get("top", 170), x + wc, d.get("top", 170) + h + 8]
+    if comp == "nt-note":
+        x, s = d.get("left", 110), d.get("size", 76)
+        w = min(d.get("w", 620), largeur(d["texte"], s, "display", 300, True))
+        n = max(1, round(largeur(d["texte"], s, "display", 300, True) / max(1, d.get("w", 620)) + 0.49))
+        h = n * s * 1.06 + (16 + s * 0.4 * 1.3 if d.get("sous") else 0)
+        if d.get("sous"):
+            w = max(w, min(d.get("w", 620), largeur(d["sous"], s * 0.4, "mono", 400, False)))
+        pad = (0, 0) if d.get("fond") is False else (34, 26)
+        return [x - OMBRE_CARTE, d.get("top", 240), x + w + 2 * pad[0], d.get("top", 240) + h + 2 * pad[1] + 8]
     raise KeyError(f"unknown geometry for overlay '{comp}'")
 
 
@@ -314,15 +357,38 @@ def poser(comp, d, t0, t1):
             d["size"] = s
     elif comp == "croyance":
         maxi = d.get("size", 62)
-        brut = " ".join(d["lignes"])
         n0 = len(d["lignes"])
         orig = list(d["lignes"])
+
+        def repartir(n):
+            """n lines, cut inside the original lines, never straddling two: an original line
+            is one piece of information (two lines glued back together then re-cut gave
+            "international M, le" and "2015 Voies Off"). The narrowest of the possible splits."""
+            meilleure = None
+
+            def rec(i, reste, acc):
+                nonlocal meilleure
+                if i == len(orig):
+                    if reste == 0:
+                        lw = max(largeur(x, maxi, "display", 400, True) for x in acc)
+                        if meilleure is None or lw < meilleure[0]:
+                            meilleure = (lw, acc)
+                    return
+                for k in range(1, reste - (len(orig) - i - 1) + 1):
+                    ls = lignes_equilibrees(orig[i], k) if k > 1 else [orig[i]]
+                    if len(ls) == k:
+                        rec(i + 1, reste - k, acc + ls)
+            rec(0, n, [])
+            return meilleure[1] if meilleure else None
+
         d["w"] = min(d.get("w", 560), Zw)
         while True:
             d["x"] = xb - d["w"]
             best = None
             for n in range(n0, n0 + 3):
-                ls = orig if n == n0 else lignes_equilibrees(brut, n)
+                ls = orig if n == n0 else repartir(n)
+                if ls is None:
+                    continue
                 s = maxi
                 while s > 32 and max(largeur(l, s, "display", 400, True) for l in ls) + 96 > d["w"]:
                     s -= 1

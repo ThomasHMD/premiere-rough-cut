@@ -9,6 +9,10 @@ and relies on tools that you install yourself (nothing of them is redistributed 
 |---|---|---|---|
 | Inter (fonts) | `skills/motion-design/public/fonts/Inter-*.woff2` | [rsms/inter](https://github.com/rsms/inter) | SIL Open Font License 1.1, full text in `OFL-Inter.txt` |
 | Source Serif 4 (fonts) | `skills/motion-design/public/fonts/SourceSerif4-*.woff2` | [adobe-fonts/source-serif](https://github.com/adobe-fonts/source-serif) | SIL Open Font License 1.1, full text in `OFL-SourceSerif4.txt` |
+| Exo 2 (fonts, neon scenes) | `skills/motion-design/public/fonts/neon/Exo2-*.woff2` | [google/fonts](https://fonts.google.com/specimen/Exo+2) | SIL Open Font License 1.1, full text in `neon/OFL-Exo2.txt` |
+| Barlow (fonts, neon scenes) | `skills/motion-design/public/fonts/neon/Barlow-*.woff2` | [jpt/barlow](https://github.com/jpt/barlow) | SIL Open Font License 1.1, full text in `neon/OFL-Barlow.txt` |
+| JetBrains Mono (fonts, matrix scenes) | `skills/motion-design/public/fonts/matrix/JetBrainsMono-*.woff2` | [JetBrains/JetBrainsMono](https://github.com/JetBrains/JetBrainsMono) | SIL Open Font License 1.1, full text in `matrix/OFL-JetBrainsMono.txt` |
+| VT323 (fonts, matrix scenes) | `skills/motion-design/public/fonts/matrix/VT323-latin.woff2` | [google/fonts](https://fonts.google.com/specimen/VT323) | SIL Open Font License 1.1, full text in `matrix/OFL-VT323.txt` |
 
 The sound effects in `skills/motion-design/public/sfx/` are synthesized by the kit's own scripts (`make-sfx.py`) and are
 under the MIT license like the rest of the code.

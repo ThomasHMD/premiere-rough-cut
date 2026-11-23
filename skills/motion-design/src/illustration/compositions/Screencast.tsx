@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   AbsoluteFill,
   OffthreadVideo,
+  cancelRender,
   continueRender,
   delayRender,
   interpolate,
@@ -203,7 +204,7 @@ export const Screencast: React.FC<ScreencastProps> = (p) => {
   useEffect(() => {
     loadFonts()
       .then(() => continueRender(handle))
-      .catch(() => continueRender(handle));
+      .catch((e) => cancelRender(new Error(`Font failed to load (screencast): ${String(e)}`)));
   }, [handle]);
 
   const [s, cx, cy] = at(p.cam, frame);

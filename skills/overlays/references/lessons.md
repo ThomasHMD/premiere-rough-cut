@@ -224,6 +224,81 @@ split into opaque (V1) + corners (V4). The grain (`public/fond/grain.png`) is ma
 - A scene lengthened to be readable must not hide the footage that starts later: `tenue()` also bounds by the
   start of the b-rolls and the demos (rule MASKED of `garde_premiere.py`).
 
+## Book review with page-turning footage
+
+What a long review of a photo book taught (plan with a flip-through of the book filmed on the same camera):
+
+- **Excerpt of a 29.97 media** (page-turning footage placed by `inSec`/`outSec`): `render-segments.py` used to count
+  `<in>` in plain 30, so Premiere read it 50 to 130 ms too far. It is now counted in NTSC 30 with the clip in
+  `ntsc TRUE`, like the rush zooms; `garde_premiere.py` CADENCE had refused those clips.
+- **Page-turning synced word by word** ("the night, the costumes, the orange light"): one shot per word lasted 0.5 to
+  1.3 s and `qc-sequence.py tenue` refuses it (a b-roll seen less than 2.5 s). Group the words into shots of at least
+  2.6 s, each placed on the first word of its group; an overlay that enters over a page-turning stays silent there
+  (`carte(..., muet=True)`).
+- **The end of a page-turning view is measured frame by frame, and the pass stops there**: between two pages the
+  speaker closes the book (cover in frame for half a second to a second and a half). Note the ends to 0.2 s on a
+  contact sheet of one frame per second: three passes out of seven ended on the closed book.
+  `VUES = {name: (entry, last frame before the page turns)}`, and `feuilletage()` brings every pass back to the end of
+  its view (no tolerance); a view shorter than 2.5 s cannot stand alone (the hold check refuses it), take another one
+  of the same direction. The contact sheets of cuts now also show the internal cuts of a block (two excerpts glued
+  together), where this defect hid.
+- **No lower third on a talking head framed chest-high**: the forbidden zone of `zone_libre.py` (head and bust, down
+  to y of about 940) covers the whole bottom left, and `Z.controle` does not know their geometry. For a name, a term or
+  a work use a `croyance` card without a bar on the right of the head (`eyebrow` + lines, `verdict` for the second
+  piece of information); for an error said on camera, the same card, struck through on the word, with the right
+  figure as the verdict.
+- **A book that already fills the frame** (cover held up to the lens): no 130% framing, it would crop the cover text.
+  A poem photographed whole: rotated if needed, cropped to the photo's ratio on the title and one stanza (`assets.py`).
+- `stat-tag`: its `prefix` overlaps the number (`controle-texte.py` CHEVAUCHE); put the information in `label`.
+- **Stock b-roll: contact sheet of the WHOLE clip (one frame per second), then a chosen entry point**
+  (`broll(..., entree=24.0)` becomes `inSec`/`outSec`). On 3 frames per variant, "hand passing a vintage film camera
+  to a younger hand" looked right; on the whole clip both variants load a film and nobody hands over the camera:
+  removed. Without an entry point a b-roll starts at second 0 (a camera lying on a table, a waiting shot).
+- `qc-sequence.py mots` skips a window with no speech in the transcript of its edit (a sponsor insert under a
+  voice-over to come): before, "0 words recognized" failed the whole check.
+- **A sponsor insert whose voice-over is laid afterwards**: that voice is a separate WAV (A2 of the sequence), absent
+  from the rush transcript. Transcribe it word by word (`whisper-cli -ml 1 -sow -ojf` on the placed excerpt), store it
+  in the work folder with its place read from the `.prproj` (`seq_debut`, `in`), anchor on it through a separate
+  function (`TS()` in the plan) and take those elements out of the head check (no face under the insert). What animates
+  it without covering it: the product name on the word where it is promised, a `side-list` per part of the product (one
+  pill per feature, timed to the word that names it, placed away from the object), a GIF timed to its gag, the "link in
+  the description" arrow with the brand code (read in the sponsor thread) at the end. Preview: `preview-sequence.py`
+  only knows the rush; assemble the excerpt with its images (speed of its sequence) and its voice under the overlays
+  of the XML.
+- **Landmarks noted in sequence time are wrong as soon as the editor recuts**: the heads (`tetes.json`, key `seq_in`)
+  and the "shows the book" windows no longer matched (zoom refused, StopIteration). Note them in RUSH time and carry
+  them over through the regenerated timeline (`seq_de_rush()` in the plan); an old `tetes.json` is re-aligned through
+  the rush ranges of each clip.
+- **One line of a `croyance` card is one piece of information**: `zone_libre.py` used to glue all lines back together
+  to re-cut them to the zone width (two separate lines became "international M, le"). It now cuts only inside a line;
+  a list keeps its trailing comma at the end of a line, a number and its unit a non-breaking space ("13 000 EUR",
+  "20 editions", "150 g"), in labels too: without it, "13 / 000 EUR".
+- **A shrunk card sticking out of the frame**: `zone_libre.py` sets the width of a `croyance` card in `w`, the
+  component read `width` (always 540 px): a card brought down to 417 px started at the right abscissa and overflowed by
+  60 px on the right, text included, so `controle-texte.py` stayed silent. The component reads `w`; `contre-passe.py`
+  BORD refuses any overlay touching the edge of the frame.
+- **Critical pass before the editor's review** (what the automatic checks let through): a contact sheet of two frames
+  per element (entry + 0.6 s, end - 0.3 s) on the preview, each element reread against the sentence it covers.
+  Seven defects: a GIF anchored on the last word of a gag overran the next subject by 4 s (anchor it at the start of
+  the sentence and stop it before the subject changes); a card whose every line starts with the same word reads as a
+  block (the common word goes up into the eyebrow); a card that contradicts what is said stays 4 s, not 2.8; the big
+  number of a label is the one just said (an 800 arrived 6 s late, on the wrong words); a lone `verdict` must be
+  understandable alone; a photo of a page of text that cannot be read does not stay 9.6 s full screen (5 s, the rest
+  on the speaker's face); a poem excerpt under 2 source px per displayed px (460 px enlarged 1.8 times, gray and
+  blurry) is set as text (`citation`), never enlarged. A whole chapter with nothing on it: its key sentence as
+  punchy words, flagged as an addition to the validated plan. `controle-texte.py` samples one frame in ten of the
+  scenes put end to end: changing a duration shifts every sampled frame, and a defect never seen before can show up
+  (here the entrance sliding in from the edge, now tolerated on a single frame, `ENTREE_DEBORDE`; a label really
+  out by 100 px is still refused, witness at 12 frames out of 13). After a LECTURE refusal, rerun the plan (it reads
+  `<base>_lecture.json`), then the check.
+- **When the speaker describes a cited photographer's work (colors, light, texture), show their photos, not only a
+  name card**: 20 s about one photographer ("almost tactile, grainy reds") had only the name card and the link arrow,
+  then the speaker's face alone. Use an `accrochage` wall of three photos, each on its word, the most telling one on the
+  key word, started after the link arrow. The photos come from **the user's own blog article on that photographer**
+  (public REST API `wp-json/wp/v2/posts?search=<name>`, then the `<img>` of the content at full size: remove the
+  `-1024x683` suffix and the image proxy): everything is already chosen there. Caption only if title and year are
+  certain (file name, article caption), otherwise none.
+
 ## Tools
 
 - Always a `timeout=` on calls to ffmpeg: a valid PNG once made `ffmpeg -loop 1` loop at 100% CPU for 20 minutes.

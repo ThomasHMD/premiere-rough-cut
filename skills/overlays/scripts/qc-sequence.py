@@ -281,6 +281,11 @@ def mots(apercu, transcription, n=8, fen=30, decalages=(0.0, 0.4, 0.8)):
     ok, meds = True, []
     for k in range(n):
         base = (dur - fen - 2 - max(decalages)) * (k + 0.5) / n
+        # window with no speech in ITS edit (e.g. a sponsor insert waiting for its voice-over):
+        # nothing to measure, not a failure (it used to report "0 words recognized" and fail the check)
+        if sum(1 for _, r in ref if base <= r < base + fen + max(decalages)) < 5 * 3:
+            print(f"excerpt {base:6.1f} s: no speech in the transcript of its edit, skipped")
+            continue
         ecarts = []
         for j, d in enumerate(decalages):
             t0 = base + d
@@ -336,9 +341,14 @@ def planches(apercu, xml, dossier, script=None, transcription=None):
             cover.append([a, b])
     tc = lambda n: f"{int(n / fps // 60):02d}:{n / fps % 60:05.2f}"
     rows = []
+    # internal cuts: two shots glued together inside one block (page-turning passes: the end of an excerpt
+    # showed the book closed, invisible on block entries and exits alone)
+    fins = {e for _, e in pl}
     for a, b in cover:
         # the wipe lasts 15 frames centered on the cut: -10 and +10 show the before and the after
         rows.append((f"block in {tc(a)}  (frames -10, -4, 0, +4, +10)", [a - 10, a - 4, a, a + 4, a + 10]))
+        for c in sorted({s for s, _ in pl if a < s < b and any(abs(s - e) <= 1 for e in fins)}):
+            rows.append((f"internal cut {tc(c)}  (frames -10, -4, -1, 0, +6)", [c - 10, c - 4, c - 1, c, c + 6]))
         rows.append((f"block out {tc(b)}  (frames -10, -4, 0, +4, +10)", [b - 10, b - 4, b, b + 4, b + 10]))
     claques = []
     if script and transcription:

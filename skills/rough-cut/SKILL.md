@@ -53,11 +53,11 @@ Detecting defects alone (v1, below) tops out around 57% recall because
 | 2b | `calibrate_premiere_times.py` | **realigns Premiere's transcript to the audio**. Run it on EVERY rough cut, right after the audio extraction (it leaves everything alone when the transcript is on time). Measures the offset by cross-correlation, window by window; a 1.8 s drift at the end of a 21 min clip has been seen. Symptom if forgotten: `silence_cuts.py` reports dozens of "suspicious noise" |
 | 3 | **Claude in context** | semantic analysis: spot retakes, false starts and stumbles by comparing Premiere's transcript with the script and with whisper. Rules below |
 | 4 | `silence_cuts.py` | silences >= 1.0 s between Premiere words, word ends realigned to the sound level, enumeration guard (short pauses between two short blocks = deliberate rhythm), noisy zone: flag or cut (see below). Defaults calibrated against finished edits: do not change them without re-measuring (see `references/lessons.md`, "Measuring") |
-| 5 | `apply_takes.py <work>` | the takes decided in step 3 are written to `takes.json` (word indices; hand-set boundaries or cuts in seconds are optional). The script puts boundaries in energy valleys, merges with the silences, melts the mute fragments left between two cuts, realigns every clip edge to the real sound, and flags an isolated sound of under 0.25 s at a clip edge, writing `cuts_final.json`. `protect` (keep a silence) only if the user asks |
+| 5 | `apply_takes.py <work>` | the takes decided in step 3 are written to `takes.json` (word indices; hand-set boundaries or cuts in seconds are optional). The script puts boundaries in energy valleys, merges with the silences, melts the mute fragments left between two cuts, flags an isolated sound of under 0.25 s at a clip edge, then **gives every join its air**, writing `cuts_final.json`. **Air at the join**: 0.27 s after the last speech of the previous clip plus 0.28 s before the first speech of the next one, 0.55 s in all, a shortfall on one side being taken from the other (a retake almost never has a breath before it). Earlier, take cuts left only 0.22 s and the rough cut was rejected at the very first join ("you cut a sentence that is not finished"). It is measured on a speech mask (15% of the p95, islands under 0.07 s discarded, gaps under 0.09 s filled in), otherwise a tongue click or a consonant closure makes it look like there is no room. A `retake` or `faux_depart` with no 0.25 s of silence available is not cut; a `begaiement` or `correction` is removed mid-sentence and needs no air. A hand-set boundary is law. `protect` (keep a silence) only if the user asks |
 | 6 | `build_premiere_xml.py` | XMEML. Option `meta["audio_file"]`: point the audio to a full-length processed WAV (see Known limits). Several clips: one XML per clip, then `merge_xml.py output.xml "name" a.xml b.xml` = a single sequence, end to end |
 | 6b | the edit, transcribed again | end-to-end check: concatenate the kept intervals of `audio.wav`, run whisper on it, and READ the text with the cut points. Catches what the other checks miss: silences left in the edit (an 8 s clip for 3 words), clipped words, a surviving failed take |
 | 7 | `qc_repeat_scan.py` | deterministic check: exit code 2 if a repeated 5-gram within 30 s survives in the edit, or if two words that follow a pause or a cut were already said less than 8 s of edit earlier (a take repeated with a variant). Every hit is checked against the script and by ear (`hear.py`): surviving retake (keep the LAST one) OR deliberate rhetoric (anaphora, enumerations) |
-| 7b | `montage_qc.py <work>` | the edit's audio is transcribed and read clip by clip, Premiere words (P) against whisper (W): exit code 2 on a blank > 1.6 s or a fragment < 1 s. A doubtful edge is checked with `hear.py audio.wav 12.3-14.0 ...` (whisper on isolated slices) |
+| 7b | `montage_qc.py <work>` | the edit's audio is transcribed and read clip by clip, Premiere words (P) against whisper (W): exit code 2 on a blank > 1.6 s, a fragment < 1 s, or a **dry join** (less than `--min-air`, 0.30 s by default, of blank between the last speech of a clip and the first of the next, stutters and corrections excepted); it also reports, without blocking, a short word of more than 0.45 s at the start of a clip (a doubled word that Premiere writes once and whisper deduplicates: "The... the book"). A doubtful edge is checked with `hear.py audio.wav 12.3-14.0 ...` (whisper on isolated slices) |
 | 8 | `report_v2.py` | report: duration of the EDIT and of the clip, takes, doubts; `--notes` for "kept on purpose" and passages touching the script's sensitive points |
 
 ### Step 3, the decision rules
@@ -103,7 +103,38 @@ Items with **empty text** are the PAUSES marked by Premiere (their duration cove
 
 More traps (words dated inside a silence, mute fragments, tiny islands): `references/lessons.md`.
 
-Take-cut boundaries: on the nearest **energy valley** of the word start, with 0.12 s of air before the attack of the kept word. Describe cuts by **word indices**, not seconds: they survive a realignment.
+Take-cut boundaries: on the nearest **energy valley** of the word start, with the air budget of step 5 around the join. Describe cuts by **word indices**, not seconds: they survive a realignment.
+
+### Read voice-over, no Premiere transcript
+
+For a voice-over recorded as a WAV (no `.prproj`) and read from a script, transcribe **chunk by chunk**, which sidesteps whisper's deduplication.
+
+| Step | Tool | Role |
+|---|---|---|
+| 1 | `transcribe_chunks.py <audio16k.wav> <work>/words_premiere.json --chunks <work>/chunks.json` | splits the audio at every pause (0.35 s or more of non-speech, measured on energy) and transcribes each chunk ALONE (`whisper-server`, `-mc 0`, `-dtw` + `-nfa` for real word times): a take and its retake fall into two chunks and both get transcribed. Chunk edges are set on the energy. Output in the format of `words_premiere.json` (plus `chunk`) |
+| 2 | `align_script.py <work> <script.md>` | position in the script of every spoken word (local window around the current reading, catch-up by similarity for misheard words and for the word that opens a take). `dossier.txt`: one chunk per line, "retake" in the margin, passages of the script never read |
+| 3 | `propose_takes.py <work>` | proposed `takes.json`: a script word said several times is kept only at its last take (whole chunk or end of chunk), short off-script chunks cut (hallucinations such as "Thanks for watching", breaths). Then **a read-through in context** of the whole file, decisions in `decisions.json` (`couper`, `couper_depuis`, `garder`, by chunk number), re-read at every rerun |
+| 4 | `silence_cuts.py`, `apply_takes.py`, `qc_repeat_scan.py`, `montage_qc.py` | unchanged |
+| 5 | `ecarts_script.py <work> <script.md>` | what the edit does differently from the script (skipped sentences, rewordings of 3 words or more): the list for the user to settle |
+| 6 | `build_premiere_xml.py` | a `meta.json` without `width` gives an audio-only sequence (empty video track) pointing at the raw 48 kHz WAV |
+
+Pitfalls (the proposal alone is not enough, always read it):
+- a **reworded** retake no longer matches the script: the aligner then keeps the take that conforms and marks the right one as off-script. Keep the last complete take, even if it is further from the script;
+- a chunk cut whole because its end is repeated can take away a start that is not (`couper_depuis`);
+- a retake of one or two words is not seen (anti-coincidence threshold): a stray "Um" left in front of a sentence, two takes of the same name both kept. `ecarts_script.py` brings them out (words doubled in the sentence).
+
+### A whole part in one XML, redone sentences put back in place
+
+One XML per part, a minute of blank between modules. The faulty sentences are redone in **a single file** (a pause before each sentence, retakes allowed), transcribed by chunks like a clip (`transcribe_chunks.py`, `silence_cuts.py`, and a `meta.json`).
+
+| Step | Tool | Role |
+|---|---|---|
+| 1 | `plan.json` (see `assemble_xml.py`) | modules in order, the clips of each module (no blank between two clips of a module), and for each retake: the clip chunks it replaces (`remplace`, end to end, already-cut chunks included) and the chunks kept from the source (last complete take) |
+| 2 | `assemble_xml.py <plan.json> <output.xml>` | one sequence: clip on A1, retakes on A2, a marker per module and per retake. Air of the retakes taken from the pauses (never a digital blank). Level of each retake brought to that of the neighboring clip ("Audio Levels" filter). Joins of the original rough cut redone from the energy (`aerer`): a clip edge inside speech moves to the dip, air reopened up to 0.55 s when under 0.30 s. An **island** (a bit of a word of the removed take left at a clip edge) is reported as "TO LISTEN" with a proposed edge, never cut automatically; after `hear.py`, the fix goes into the plan: `"bornes": [{"rush", "de", "a", "pourquoi"}]`. `--sans-aerer`, `--brut` | <!-- fr-ok -->
+| 3 | `qc_assemblage.py <xml> <plan.json> <folder> --avant` | on the delivered XML: sound redone clip by clip, air and edges at every join, level of the retakes, retranscription of each module against its script (new deviations compared with the original rough cuts, script positions said twice). Exit code 2 on an alert |
+| 4 | `rendre_voix.py <xml> <output folder>` | **after the user's approval**: one WAV per module, the very sound of the sequence (A1 and A2 clips with their level), 2.8 s of silence at the head (first word around 3 s), 48 kHz mono 24-bit; nothing is rewritten if identical |
+
+`raccords.py`: the air-at-the-join measure (speech mask, continuous blank), shared by `montage_qc.py` and `qc_assemblage.py`. Premiere reads the "Audio Levels" filter of the XML (0 dB = 0.17783 in the `.prproj`, which stores volume with 15 dB of headroom). More traps: a silence cut that starts on a word end dated too early by whisper eats the end of the sentence; doubled script positions can be mere turns of phrase said twice: read the text before reporting them.
 
 The v1 pipeline (below) remains the fallback when there is **no** Premiere transcript (warn that word-for-word retakes will probably be missed).
 

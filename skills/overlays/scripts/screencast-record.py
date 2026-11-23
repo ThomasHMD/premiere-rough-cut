@@ -374,17 +374,44 @@ async def main() -> None:
         ctx = await browser.new_context(
             viewport={"width": vw, "height": vh}, device_scale_factor=dpr,
             locale="fr-FR", timezone_id="Europe/Paris", color_scheme=sc.get("colorScheme", "light"),
+            # User agent of a real Chrome: "HeadlessChrome" is filtered or treated apart by some sites.
+            user_agent=sc.get("userAgent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                                           "(KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"),
             **geo_kw,
         )
-        if sc.get("hide"):
+        # Our demos never count as visitors: GA4 cut off (rule of 11/2026).
+        await ctx.route(re.compile(r"/g/collect"), lambda route: route.abort())
+        if sc.get("hide") or sc.get("blur"):
             # Hide what pollutes a demo (cookie banner, newsletter box,
             # chat widget) on every page, even before their first render.
-            css = ", ".join(sc["hide"]) + " { display: none !important; }"
+            # "blur" blurs what must not show but keeps the layout
+            # (prices, promos, affiliate links, private figures).
+            css = ""
+            if sc.get("hide"):
+                css += ", ".join(sc["hide"]) + " { display: none !important; }"
+            if sc.get("blur"):
+                css += ", ".join(sc["blur"]) + " { filter: blur(%dpx) !important; }" % sc.get("blurPx", 7)
+            # Set from the very start of the document, not at DOMContentLoaded: a long page
+            # paints in pieces before that, and a price used to show sharp for a fraction of a
+            # second on arrival. Selectors must therefore not depend on an element lower
+            # in the page (`body:has(#x)`): to target one page, `html[data-chemin="/some-page"] ...`.
             await ctx.add_init_script(script=f"""(() => {{
-                const add = () => {{ const s = document.createElement('style');
-                    s.textContent = {json.dumps(css)};
-                    (document.head || document.documentElement).appendChild(s); }};
-                document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', add) : add();
+                const s = document.createElement('style');
+                s.textContent = {json.dumps(css)};
+                // At this point <html> may not exist yet: wait for it (observer) instead of crashing.
+                const pose = () => {{
+                    const r = document.documentElement;
+                    if (!r) return false;
+                    r.dataset.chemin = location.pathname;
+                    r.appendChild(s);
+                    return true;
+                }};
+                if (!pose()) {{
+                    const mo = new MutationObserver(() => {{ if (pose()) mo.disconnect(); }});
+                    mo.observe(document, {{childList: true}});
+                }}
+                // <head> arrives later: put the style there again so that it stays in place.
+                document.addEventListener('DOMContentLoaded', () => document.head && document.head.appendChild(s));
             }})()""")
         page = await ctx.new_page()
         await page.goto(sc["url"], wait_until="load")

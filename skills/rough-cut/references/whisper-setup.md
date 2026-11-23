@@ -25,7 +25,7 @@ scripts detect all three.
 ## Downloading the model
 
 Recommended model: `large-v3-turbo` (about 1.5 GB, best quality/speed trade-off).
-On Apple Silicon (M4 Max): about 15-25x real time, so 5 min of footage is about 15-20 s of transcription.
+On Apple Silicon: about 15-25x real time, so 5 min of footage is about 15-20 s of transcription.
 
 ```bash
 mkdir -p ~/Models/whisper

@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.1.0
+
+**rough-cut**
+- Every join now gets its air (0.27 s + 0.28 s, 0.55 s in all), measured on a speech mask; take cuts that would land in the middle of speech are dropped, and hand-set bounds are never touched.
+- `montage_qc.py` fails on dry joins (`--min-air`, 0.30 s by default) and reports possible doubled words at the start of a clip.
+- New route for a voice-over read from a script, with no Premiere transcript: `transcribe_chunks.py`, `align_script.py`, `propose_takes.py`, `ecarts_script.py`.
+- New `assemble_xml.py`, `qc_assemblage.py` and `rendre_voix.py`: a whole part in one XML with redone sentences in place, and one WAV per module.
+- `report_v2.py` takes the version from `meta.json`; new `raccords.py` shared by the QC scripts.
+
+**subtitles**
+- WhisperX was measured against this pipeline (whisper.cpp + forced CTC alignment): word boundaries within 34 ms median, so it is not used.
+
+**overlays**
+- Page-turning footage of a 29.97 fps media is read at its real rate (NTSC `<in>`), fixing a 50 to 130 ms offset in Premiere.
+- Site demos: new `blur` option to hide prices, promos and private figures while keeping the layout; analytics collection is aborted while recording.
+- Tella-style edit: per-shoot `geometrie` key in the layout plan, `--media-derush` / `--decalage-cam` when the rough cut was made on a composite, new `nocturne` animated background.
+- Checks: `controle-texte.py` tolerates an entrance sliding in from the edge on a single sampled frame; `qc-sequence.py` shows internal cuts of a block and skips windows with no speech.
+- `zone_libre.py`: cards keep their original lines, and new left-anchored "Nocturne" overlays (EXIF, correction, note).
+
+**motion-design**
+- Font loaders now fail the render with `cancelRender` instead of silently falling back to a substitute font.
+- New "Nocturne" scenes: `nt-exif`, `nt-correction`, `nt-note`.
+- Workshop rules from the official Remotion skills: `<Img>` instead of `<img>`, several key frames in one bundle with `--frames`, `perceptual-scale` for new animated zooms.
+
 ## 2.0.0
 
 - **The kit is now in English**: docs, scripts, messages, reports and on-screen default strings. Neutral and MIT licensed.

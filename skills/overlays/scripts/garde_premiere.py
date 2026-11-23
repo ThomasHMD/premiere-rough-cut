@@ -254,7 +254,10 @@ def valider_xml(xml_path: Path) -> list[str]:
             if any(fichier(x) is not None and _path(fichier(x)) == p for x, _, _ in (vids[0] if vids else [])):
                 continue
             t = s0 / fps
-            clip = next((x for x in tl if x["seq_in"] - one / 2 <= t < x["seq_out"]), None)
+            # a zoom starting exactly on one of its cuts falls in both clips (the cut rounded to within 0.1 ms):
+            # it belongs to the clip that STARTS there (otherwise refused with a large offset, the previous clip taken as its own)
+            cands = [x for x in tl if x["seq_in"] - one / 2 <= t < x["seq_out"]]
+            clip = max(cands, key=lambda x: x["seq_in"]) if cands else None
             if clip is None:
                 err.append(f"SYNC POINT: {p.name} at {t:.2f} s outside its edit")
                 continue

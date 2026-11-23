@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   AbsoluteFill,
   Easing,
+  cancelRender,
   continueRender,
   delayRender,
   interpolate,
@@ -117,8 +118,8 @@ export const useDsFonts = () => {
         (document.fonts as unknown as Set<FontFace>).add(await face.load());
       }),
     )
-      .catch((e) => console.error("Fonts", e))
-      .finally(() => continueRender(handle));
+      .then(() => continueRender(handle))
+      .catch((e) => cancelRender(new Error(`DS font failed to load: ${String(e)}`)));
   }, [handle]);
 };
 

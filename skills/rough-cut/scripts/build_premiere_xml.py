@@ -75,14 +75,15 @@ def make_file_element(file_id, rush_path, total_frames, timebase, ntsc, width, h
     ET.SubElement(file_el, "duration").text = str(total_frames)
 
     media = ET.SubElement(file_el, "media")
-    video = ET.SubElement(media, "video")
-    video_sc = ET.SubElement(video, "samplecharacteristics")
-    add_rate(video_sc, timebase, ntsc)
-    ET.SubElement(video_sc, "width").text = str(width)
-    ET.SubElement(video_sc, "height").text = str(height)
-    ET.SubElement(video_sc, "anamorphic").text = "FALSE"
-    ET.SubElement(video_sc, "pixelaspectratio").text = "square"
-    ET.SubElement(video_sc, "fielddominance").text = "none"
+    if width:  # sans largeur : rush audio seul (voix off en WAV), pas de <video>
+        video = ET.SubElement(media, "video")
+        video_sc = ET.SubElement(video, "samplecharacteristics")
+        add_rate(video_sc, timebase, ntsc)
+        ET.SubElement(video_sc, "width").text = str(width)
+        ET.SubElement(video_sc, "height").text = str(height)
+        ET.SubElement(video_sc, "anamorphic").text = "FALSE"
+        ET.SubElement(video_sc, "pixelaspectratio").text = "square"
+        ET.SubElement(video_sc, "fielddominance").text = "none"
 
     audio = ET.SubElement(media, "audio")
     ET.SubElement(audio, "channelcount").text = str(audio_channels)
@@ -214,8 +215,11 @@ def main():
     fps_num = meta["fps_num"]
     fps_den = meta["fps_den"]
     duration = meta["duration_seconds"]
-    width = meta["width"]
-    height = meta["height"]
+# Audio-only clip (voice-over WAV): meta without "width". The sequence keeps
+# a 1920x1080 video format (Premiere wants one) but its video track stays empty.
+    audio_only = not meta.get("width")
+    width = meta.get("width")
+    height = meta.get("height")
     rush_path = meta["rush_path"]
     audio_channels = meta["audio_channels"]
     audio_rate = meta["audio_rate"]
@@ -252,8 +256,8 @@ def main():
     v_format = ET.SubElement(video_media, "format")
     v_sc = ET.SubElement(v_format, "samplecharacteristics")
     add_rate(v_sc, timebase, ntsc)
-    ET.SubElement(v_sc, "width").text = str(width)
-    ET.SubElement(v_sc, "height").text = str(height)
+    ET.SubElement(v_sc, "width").text = str(width or 1920)
+    ET.SubElement(v_sc, "height").text = str(height or 1080)
     ET.SubElement(v_sc, "anamorphic").text = "FALSE"
     ET.SubElement(v_sc, "pixelaspectratio").text = "square"
     ET.SubElement(v_sc, "fielddominance").text = "none"
@@ -270,7 +274,7 @@ def main():
     # one-frame differences between duration and end-start, which Premiere rejects).
     seq_frames = 0
     first_video_done = False
-    for i, clip in enumerate(spine_clips):
+    for i, clip in enumerate([] if audio_only else spine_clips):
         clip_duration = clip["end"] - clip["start"]
         if clip_duration < 0.07:  # < 2 frames: invalid clip for Premiere (in == out)
             continue
@@ -336,7 +340,9 @@ def main():
                 first_audio_done = True
             else:
                 file_el = make_file_element(file_id, rush_path, total_frames, timebase, ntsc,
-                                            width, height, audio_channels, audio_rate, full=False)
+                                            width, height, audio_channels, audio_rate,
+                                            full=audio_only and not first_audio_done)
+                first_audio_done = True
             clipitem = make_clipitem(
                 f"clipitem-a{ch}-{i:03d}", name, file_el,
                 in_f, out_f, start_f, end_f,

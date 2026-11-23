@@ -63,32 +63,171 @@ def quiet_zone(t):
     return lo * HOP, (hi + 1) * HOP
 
 
+# Air left on both sides of a take cut. Measured on a real video: take cuts left only
+# 0.10 + 0.12 = 0.22 s, against 0.55 s for the silence cuts the editor had approved. Result
+# by ear: the kept sentence has no time to settle before the next one, "you cut a sentence
+# that is not finished" (the editor's reaction to the first join). We now match the silences.
+AIR_A = 0.27        # after the last kept speech (end of clip A)
+AIR_B = 0.28        # before the attack of the first kept speech (start of clip B)
+AIR_TOTAL = 0.55    # target at the join; a shortfall on one side is taken from the other
+AIR_MIN = 0.25      # below this, the cut lands in the middle of speech: we do not make it
+
+
+# Speech mask: more tolerant than QUIET (which requires absolute silence and drops to zero
+# as soon as there is a mouse or keyboard under the voice). Gaps shorter than TROU_MAX are
+# filled in: a consonant closure (the /ʒ/ of French "je" after "longtemps") is a 60 ms dip
+# in the middle of a run of words, not a breath. Without this filling, the cut lands in
+# that dip and the kept sentence stops dead.
+TH_PAROLE = P95 * 0.15
+TROU_MAX = 0.09
+BLIP_MAX = 0.07     # une syllabe dure plus longtemps ; en dessous c'est un claquement
+
+_parole = rms > TH_PAROLE
+# First the islands too short to be a syllable (tongue click, mouse, key click): without
+# this, a 30 ms spike splits a 2.3 s silence in two and the air budget measured around it
+# drops to 0.17 s.
+_i = 0
+while _i < len(_parole):
+    if _parole[_i]:
+        _j = _i
+        while _j < len(_parole) and _parole[_j]:
+            _j += 1
+        if (_j - _i) * HOP < BLIP_MAX:
+            _parole[_i:_j] = False
+        _i = _j
+    else:
+        _i += 1
+_i = 0
+while _i < len(_parole):
+    if not _parole[_i]:
+        _j = _i
+        while _j < len(_parole) and not _parole[_j]:
+            _j += 1
+        if _i > 0 and _j < len(_parole) and (_j - _i) * HOP < TROU_MAX:
+            _parole[_i:_j] = True
+        _i = _j
+    else:
+        _i += 1
+
+
+def zone_sans_parole(t):
+    """(start, end) of the SPEECHLESS gap around time t, or (t, t) if t falls in the middle
+    of speech. Used to measure the air really available around a cut."""
+    i = min(len(_parole) - 1, max(0, int(t / HOP)))
+    if _parole[i]:
+        # Premiere sometimes dates the word 30 ms too early or too late: look right next to it.
+        for d in range(1, int(0.12 / HOP) + 1):
+            if i - d >= 0 and not _parole[i - d]:
+                i -= d
+                break
+            if i + d < len(_parole) and not _parole[i + d]:
+                i += d
+                break
+        else:
+            return t, t
+    lo = i
+    while lo > 0 and not _parole[lo - 1]:
+        lo -= 1
+    hi = i
+    while hi < len(_parole) - 1 and not _parole[hi + 1]:
+        hi += 1
+    return lo * HOP, (hi + 1) * HOP
+
+
+def paroles(a, b):
+    """Ranges of SPEECH in [a, b], from the mask (clicks already discarded)."""
+    i0, i1 = max(0, int(a / HOP)), min(len(_parole), int(b / HOP) + 1)
+    out, i = [], i0
+    while i < i1:
+        if _parole[i]:
+            j = i
+            while j < i1 and _parole[j]:
+                j += 1
+            out.append((i * HOP, j * HOP))
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def air_bornes(t_coupe, t_garde):
+    """Bounds of a take cut, with the air shared between the two sides.
+
+    t_coupe = start of the first REMOVED word, t_garde = start of the first KEPT word after.
+    Returns (start, end, air_a, air_b, budget): the budget is the silence actually
+    available on both sides, which caps everything. When one side has nothing to give
+    (cut placed in a run-on with no breath), the rest is taken from the other; if the
+    total stays under AIR_MIN, the caller drops the cut."""
+    lo_a, hi_a = zone_sans_parole(t_coupe)   # gap between the kept speech and the removed word
+    lo_b, hi_b = zone_sans_parole(t_garde)   # gap between the removed speech and the kept word
+    bud_a, bud_b = hi_a - lo_a, hi_b - lo_b
+    air_a, air_b = min(AIR_A, bud_a), min(AIR_B, bud_b)
+    manque = AIR_TOTAL - (air_a + air_b)
+    if manque > 0:                        # take it from the side that still has room
+        pris = min(manque, bud_b - air_b)
+        air_b += pris
+        manque -= pris
+    if manque > 0:
+        air_a += min(manque, bud_a - air_a)
+    return lo_a + air_a, hi_b - air_b, air_a, air_b, bud_a + bud_b
+
+
 def cut_end(t):
-    """Cut end before the first kept word: 0.12 s of air before the real attack."""
+    """Cut end before the first kept word (used outside take cuts)."""
     lo, hi = quiet_zone(t)
-    return max(lo, hi - 0.12)
+    return max(lo, hi - AIR_B)
 
 
 def cut_start(t):
-    """Cut start at the first cut word: 0.10 s after the real end of the kept word
-    before it (the silence before, if long, is handled by silence_cuts)."""
+    """Cut start at the first cut word (used outside take cuts)."""
     lo, hi = quiet_zone(t)
-    return min(hi, lo + 0.10)
+    return min(hi, lo + AIR_A)
 
 
 sem = []
+refus = []
 for a, b, typ, conf, why, *opt in takes.get("cuts", []):
-    start = 0.0 if a is None else cut_start(words[a]["start"])
-    end = cut_end(words[b + 1]["start"]) if b + 1 < len(words) else DUR
+    air_a = air_b = None
+    if b + 1 >= len(words):
+        start = 0.0 if a is None else cut_start(words[a]["start"])
+        end = DUR
+    elif a is None:
+        start = 0.0
+        end = cut_end(words[b + 1]["start"])
+    else:
+        start, end, air_a, air_b, budget = air_bornes(words[a]["start"], words[b + 1]["start"])
+        # Not enough silence on either side: the cut would land in the middle of speech and
+        # the kept sentence would stop dead. We do not make it.
+        # Only for cuts that end a take (retake, false start): a stutter or a correction is
+        # removed IN THE MIDDLE of a sentence, the delivery carries on over it and there is
+        # no air to leave.
+        if not opt and typ in ("retake", "faux_depart") and budget < AIR_MIN:
+            refus.append((words[a]["start"], budget, why))
+            continue
     # optional 6th element {"start": s, "end": s}: boundary set by hand (in seconds)
     # when the edit QC shows a sound left at the edge (word badly cut by Premiere)
+    manuel = bool(opt)
     if opt:
         start, end = opt[0].get("start", start), opt[0].get("end", end)
+    # Cutting word 0 used to leave the blank before it (0.5 s, "fragment" at QC); and a word
+    # said in one breath with the next ("Well, but") gave an empty cut, with no error: the
+    # word stayed in the edit.
+    if a == 0:
+        start = 0.0
+    if end - start < 0.05:
+        print(f"⚠ empty cut {start:.2f}-{end:.2f} ({why[:60]}): word stuck to the next one, "
+              f"set the bounds by hand (6th element, after hear.py)")
     sem.append({"start": round(start, 2), "end": round(end, 2), "decision": "disable",
                 "confidence": conf, "type": typ, "reason": why,
                 "words": [a if a is not None else 0, b],
                 "coupe": " ".join(x["text"] for x in words[(a or 0): b + 1])[:160],
+                "manuel": manuel,
+                "air_a": None if air_a is None else round(air_a, 2),
+                "air_b": None if air_b is None else round(air_b, 2),
                 "garde_ensuite": " ".join(x["text"] for x in words[b + 1: b + 7])})
+for t, budget, why in refus:
+    print(f"⚠ cut dropped at {t:.2f}s: only {budget:.2f}s of silence available "
+          f"(< {AIR_MIN}), it would cut in the middle of speech. {why[:70]}")
 flags = []
 for a, b, typ, conf, why in takes.get("flags", []):
     flags.append({"start": round(words[a]["start"], 2),
@@ -137,12 +276,16 @@ for c in dis:
     if merged and c["start"] - merged[-1]["end"] < 0.3:
         m = merged[-1]
         m["end"] = max(m["end"], c["end"])
+        m["manuel"] = m.get("manuel") or c.get("manuel", False)
         if c["type"] != "silence" and m["type"] == "silence":
             m["type"], m["reason"], m["confidence"] = c["type"], c["reason"], c["confidence"]
         elif c["type"] != "silence" and c["reason"] not in m["reason"]:
             m["reason"] += " + " + c["reason"]
     else:
         merged.append({k: c[k] for k in ("start", "end", "decision", "confidence", "type", "reason")})
+        # "manuel" used to be lost here, so the air pass rewrote the hand-set boundaries
+        # despite "it is law" below.
+        merged[-1]["manuel"] = c.get("manuel", False)
 # Mute fragments: a leftover of less than a second between two cuts, with nothing louder
 # than a breath, goes with them. Cause: a word that Premiere dated in the middle of a
 # silence (actually said before), which silence_cuts therefore protected.
@@ -186,6 +329,7 @@ def sons(a, b):
     return out
 
 
+sons_clip = {}
 for i in range(len(merged) + 1):
     k0 = merged[i - 1]["end"] if i > 0 else 0.0
     k1 = merged[i]["start"] if i < len(merged) else DUR
@@ -207,13 +351,46 @@ for i in range(len(merged) + 1):
             print(f"isolated word at the {bord} of a clip {e[0]:.2f}: doubt")
             flags.append({"start": round(e[0], 2), "end": round(e[1] + 0.3, 2), "decision": "flag", "confidence": 0.6,
                           "type": "eclat", "reason": REASONS["isolated_sound_" + bord].format(duration=e[1] - e[0])})
-    if i > 0 and r[0][0] - 0.20 > k0 + 0.35:
-        print(f"gap at the head of a clip {k0:.2f}-{r[0][0] - 0.20:.2f} removed")
-        merged[i - 1]["end"] = round(r[0][0] - 0.20, 2)
-    fin_du_rush = i < len(merged) and merged[i]["end"] >= DUR - 0.05  # the air after the last word is kept
-    if i < len(merged) and not fin_du_rush and r[-1][1] + 0.25 < k1 - 0.35:
-        print(f"gap at the tail of a clip {r[-1][1] + 0.25:.2f}-{k1:.2f} removed")
-        merged[i]["start"] = round(r[-1][1] + 0.25, 2)
+    sons_clip[i] = r
+
+# Air at the join, single pass. Before, two mechanisms contradicted each other: take cuts
+# were placed 0.10 / 0.12 s from the speech, then this re-trim brought any blank back to
+# 0.20 / 0.25 s. In total 0.22 s at the join of a take cut, against 0.55 s on the silence
+# cuts the editor had approved. By ear the kept sentence had no time to settle: "you cut a
+# sentence that is not finished". Now a single budget, measured between the LAST SPEECH of
+# the previous clip and the FIRST of the next one, taken from the side that has it.
+for i, c in enumerate(merged):
+    if c["end"] >= DUR - 0.05 or c["start"] <= 0.05:   # ends of the clip: handled above
+        continue
+    if c.get("manuel"):                   # hand-set bound: it is law
+        continue
+    av = paroles(merged[i - 1]["end"] if i > 0 else 0.0, c["start"])
+    ap = paroles(c["end"], merged[i + 1]["start"] if i + 1 < len(merged) else DUR)
+    if not av or not ap:
+        continue
+    fin_a, debut_b = av[-1][1], ap[0][0]
+    # what SPEAKS in the removed material, bounds excluded (paroles() also returns the range
+    # that starts at debut_b: keeping it wiped out all the air on side B)
+    dedans = [r for r in paroles(fin_a, debut_b)
+              if r[1] > fin_a + 1e-6 and r[0] < debut_b - 1e-6]
+    if dedans:
+        max_a, max_b = dedans[0][0] - fin_a, debut_b - dedans[-1][1]
+    else:                                 # silence cut: the whole interval is blank
+        max_a = max_b = debut_b - fin_a
+    air_a, air_b = min(AIR_A, max_a), min(AIR_B, max_b)
+    manque = AIR_TOTAL - (air_a + air_b)
+    if manque > 0:
+        pris = min(manque, max_b - air_b)
+        air_b += pris
+        manque -= pris
+    if manque > 0:
+        air_a += min(manque, max_a - air_a)
+    start, end = round(fin_a + air_a, 2), round(debut_b - air_b, 2)
+    if end - start > 0.05:
+        if abs(start - c["start"]) > 0.02 or abs(end - c["end"]) > 0.02:
+            print(f"air du raccord {c['start']:.2f}->{c['end']:.2f} : "
+                  f"{start:.2f}->{end:.2f} ({air_a:.2f} + {air_b:.2f} = {air_a + air_b:.2f} s)")
+        c["start"], c["end"] = start, end
 
 for m in merged:
     m["end"] = min(m["end"], DUR)

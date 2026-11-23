@@ -23,6 +23,15 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+if not hasattr(cv2, "CascadeClassifier"):
+    # OpenCV 5 (Homebrew's python3 3.15) no longer ships the face cascades:
+    # rerun under python3.14, which has OpenCV 4.
+    import os
+    ALT = "/opt/homebrew/bin/python3.14"
+    if Path(ALT).exists() and Path(sys.executable).resolve() != Path(ALT).resolve():
+        os.execv(ALT, [ALT, *sys.argv])
+    sys.exit("ERROR: this OpenCV has no CascadeClassifier (OpenCV 5): run montre.py with python3.14")
+
 PAS = 0.5          # one frame every 0.5 s
 FENETRE_MIN = 1.0  # at least 1 s without a face
 TROU_MAX = 0.6     # a face seen in a single frame in the middle does not split the window

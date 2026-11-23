@@ -575,6 +575,7 @@ recording makes about 1 GB of frames per minute: always `--out` in a scratch fol
   "viewport": [1440, 810], "dpr": 2, "slow": 4,
   "rushStart": 0,
   "hide": [".cookie-banner"],
+  "blur": [".price", "a.offer"],
   "render": { "fps": 60, "background": "dark" },
   "steps": [
     { "do": "wait", "sec": 1.4, "eyebrow": "The site", "caption": "The home page" },
@@ -600,7 +601,7 @@ recording makes about 1 GB of frames per minute: always `--out` in a scratch fol
 On any step: `caption` (+ `eyebrow`, `captionSec`); **`at`** (seconds from `rushStart`) or **`word`** (+
 `occurrence`, `offset`) to start exactly on a word of the transcript. If a gesture runs late (slow page), the
 render realigns time (speed-up flagged beyond x2.5). `target` = Playwright selector (CSS, `:has-text()`,
-`text=...`). `hide`: elements hidden on all pages (cookies, chat, newsletter pop-up). `geolocation`:
+`text=...`). `hide`: elements hidden across all pages (cookies, chat, newsletter pop-up). `blur`: selectors blurred on all pages, the layout stays (`blurPx`, 7 by default). Mandatory for a public demo: no price, no promo, no affiliate link, no private figure in the image; then check the frames of the sheet. The style is set from the very start of the document (a long page paints in pieces): a selector must not depend on an element lower in the page (`body:has(#x)` lets sharp text through when the page loads); to target one page, `html[data-chemin="/some-page"] p.hero__lead`. Check: OCR at 4 frames per second or more around each page change. Analytics collection (`/g/collect`) is aborted during recording, so demos never count as visitors. `geolocation`:
 `[lat, lon]`, a SIMULATED position (never the user's) with the permission granted, for "near me" buttons.
 `render`: `fps` (that of the clip, 29.97 included), `background` `dark`/`paper`/`accent`, `chrome` (browser
 bar), `autoZoom` (1.7; 0 = none), `maxZoom` (2.0), `zoomLead`/`zoomHold` (the zoom starts 1.1 s before the click,
@@ -642,8 +643,8 @@ video alternates between four layouts animated by Basic Motion keyframes, fully 
 ```bash
 python3 scripts/montage-tella.py --cam <cam.mov> --ecran <ecran.mov> --derush <cam_Derush_v1_work> \
   --plan <plan-dispositions.json> --out <..._Montage_v1.xml> --nom "Montage_v1" \
-  [--decalage-ecran auto|0.0333] [--fond papier|nuit|brume|fixe] [--periode 20] \
-  [--habillage <Illustration V1.xml>] [--apercu <folder> --instants 72 263 --reduction 2]
+  [--decalage-ecran auto|0.0333] [--fond papier|nuit|brume|nocturne|fixe] [--periode 20] \
+  [--habillage <Illustration V1.xml>] [--media-derush <composite.mov> --decalage-cam auto] [--apercu <folder> --instants 72 263 --reduction 2]
 ```
 
    It takes exactly the clips of the rough cut, aligns the screen on the camera by voice correlation (`auto`),
@@ -653,7 +654,16 @@ python3 scripts/montage-tella.py --cam <cam.mov> --ecran <ecran.mov> --derush <c
    written: look at the sheet before delivering. **Before the first take**: remeasure at the top of the script
    `FACE` (face in the camera), `CAM_CARTE` (4:5 crop of the thumbnail), `ECRAN_SRC` (screen without the menu bar)
    and `LOUPE` (area of the app where we zoom) on a frame of THE shoot.
-4. **Animated background** (default): `FondAnime` composition of the workshop, variants `papier`, `nuit`, `brume`; `--fond fixe` = a fixed dark gradient. Five 4K loops rendered once into `<video folder>/Montage/` (`fond-*`, `ombre-*`, `coins-*`), redone only if the props, `FondAnime.tsx` or the grain change. Details of the loops: `references/lessons.md`, "Tella-style background".
+   **Geometry specific to each shoot** (e.g. 3840x2160 screen, Lightroom in the middle): `geometrie` key of
+   `plan-dispositions.json` (`face`, `cam_carte`, `loupe`, `ecran_src`, in pixels of the rush; `loupe` and
+   `ecran_src` must be 16:9 or the script refuses), measured on frames of the shoot. **Rough cut made on the
+   composite** (the camera had been forgotten at the rough cut): `--media-derush "<composite.mov>"` and
+   `--decalage-cam auto` (voice correlation: here cam = composite minus 5 frames); with `--sequence`, the transcript of
+   the editor's sequence is redone on the composite and `plan.py` places everything in sequence time. Placement of the
+   overlays per layout (cards at 1920 wide: screen [60, 128, 1524, 952] and thumbnail [1560, 577, 1860, 952] in
+   ECRAN and ZOOM; [60, 198, 1277, 882] and [1313, 198, 1860, 882] in COTE): top band or column above the thumbnail,
+   never on a card, never straddling two layouts; checked in the plan (`CARTES`, `BANDEAU`).
+4. **Animated background** (default): `FondAnime` composition of the workshop, variants `papier`, `nuit`, `brume`, `nocturne`; `--fond fixe` = a fixed dark gradient. Five 4K loops rendered once into `<video folder>/Montage/` (`fond-*`, `ombre-*`, `coins-*`), redone only if the props, `FondAnime.tsx` or the grain change. Details of the loops: `references/lessons.md`, "Tella-style background".
 5. **Overlays** (b-rolls, scenes, wipes, sounds): a Python plan `<clip>_Illustration_work/plan.py` that imports
    `montage-tella.py` to know the shots and their layout, and places each overlay according to the layout of the
    moment: over the full-frame camera, at the side opposite the face (measure the free zone on frames of this

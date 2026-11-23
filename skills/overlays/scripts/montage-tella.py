@@ -12,7 +12,7 @@ Usage, layout grammar and pitfalls: section "Tella-style edit" of the overlays S
 
 Tracks (bottom to top): V1 background, V2 screen, V3 cam, V4 corners (rounds the cards during the
 still shots, absent during the moves).
-Animated background by default (`--fond papier|nuit|brume`, FondAnime composition of the
+Animated background by default (`--fond papier|nuit|brume|nocturne`, FondAnime composition of the
 motion-design workshop, seamless loop of `--periode` s): V1 = the background loop, or during
 the still shots the "background + card shadows" loop of the layout; V4 = the loop
 of the corners alone (ProRes 4444, transparent elsewhere). All loops are placed in
@@ -74,6 +74,22 @@ CAM_CARTE = (1250, 150, 2750, 2025)  # 4:5 crop around the face (cam source)
 LOUPE = (368, 120, 2188, 1144)     # Lightroom Loupe area in 16:9 (screen source)
 ECRAN_SRC = (55, 62, 2505, 1440)   # screen without the macOS menu bar (white, rows 0 to 61), 16:9
 PUNCH = 1.12
+
+# The geometry above is that of one shoot (2560×1440 screen). Each shoot has its own: open
+# windows, screen resolution, face position. It goes in the "geometrie" key of
+# plan-dispositions.json (e.g. a 3840×2160 screen, central Lightroom panel already 16:9, face at
+# (2025, 928)), measured on frames of the shoot.
+def charger_geometrie(plan: dict):
+    """Overrides FACE, CAM_CARTE, LOUPE, ECRAN_SRC from plan["geometrie"] (optional keys)."""
+    g = plan.get("geometrie") or {}
+    for cle, nom in (("face", "FACE"), ("cam_carte", "CAM_CARTE"), ("loupe", "LOUPE"),
+                     ("ecran_src", "ECRAN_SRC")):
+        if cle in g:
+            globals()[nom] = tuple(g[cle])
+    for nom, r in (("LOUPE", LOUPE), ("ECRAN_SRC", ECRAN_SRC)):
+        ar = (r[2] - r[0]) / (r[3] - r[1])
+        if abs(ar - W / H) > 0.02:
+            sys.exit(f"{nom} = {r} : rapport {ar:.3f}, attendu {W / H:.3f} (les cartes sont en 16:9)")
 
 def _ecran_layout():
     wc = 600; hc = wc * 5 / 4
@@ -492,13 +508,18 @@ def main():
     ap.add_argument("--derush", required=True, type=Path)
     ap.add_argument("--plan", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
-    ap.add_argument("--decalage-ecran", default="auto")
+    ap.add_argument("--decalage-ecran", default="auto",
+                    help="lag of the screen voice behind the cam voice (s), or 'auto'")
+    ap.add_argument("--media-derush", default=None,
+                    help="media the rough cut was made on, if it is not the cam: the OBS composite\n('1 montage.mov' for instance). That is the one looked up in the editor's sequence.")
+    ap.add_argument("--decalage-cam", default="auto",
+                    help="with --media-derush: lag of the cam voice behind that media's voice (s)")
     ap.add_argument("--nom", default=None)
     ap.add_argument("--apercu", type=Path, default=None, help="contact sheet of composited frames for checking")
     ap.add_argument("--instants", type=float, nargs="*", default=None,
                     help="with --apercu: edit seconds to composite (instead of the first 12 shots)")
     ap.add_argument("--reduction", type=int, default=4, help="with --apercu: 1 = full resolution")
-    ap.add_argument("--fond", default="papier", choices=["papier", "nuit", "brume", "fixe"],
+    ap.add_argument("--fond", default="papier", choices=["papier", "nuit", "brume", "nocturne", "fixe"],
                     help="animated background (FondAnime variant) or 'fixe' (dark gradient as a PNG)")
     ap.add_argument("--periode", type=float, default=20.0, help="length of the animated background loop (s)")
     ap.add_argument("--prproj", type=Path, default=None,
@@ -516,15 +537,30 @@ def main():
     off = round(dec * FPS)
     print(f"screen lags {dec:+.3f} s behind the cam: screen in = cam in {off:+d} frame(s)")
 
+    # The rough cut may have been made on another file of the same take (the OBS composite):
+    # its cuts are in the time of THAT file. The three start a few frames apart.
+    media_derush = a.media_derush or a.cam.name
+    if a.media_derush:
+        src = a.cam.parent / a.media_derush
+        if not src.exists():
+            sys.exit(f"--media-derush: {src} not found")
+        dc = decalage_voix(src, a.cam) if a.decalage_cam == "auto" else float(a.decalage_cam)
+        off_cam = round(dc * FPS)
+        print(f"cam lags {dc:+.3f} s behind {a.media_derush}: cam in = rough-cut in {off_cam:+d} frame(s)")
+    else:
+        off_cam = 0
+
+    plan = json.loads(a.plan.read_text())
+    charger_geometrie(plan)
+
     meta = json.loads((a.derush / "meta.json").read_text())
     if a.sequence:
         bornes = {x for c in intervalles(a.derush, meta["duration_seconds"]) for x in (c["in"], c["out"])}
-        clips = clips_de_sequence(a.prproj or next(a.out.parent.glob("*.prproj")), a.sequence, a.cam.name, bornes)
+        clips = clips_de_sequence(a.prproj or next(a.out.parent.glob("*.prproj")), a.sequence, media_derush, bornes)
         print(f"cuts read from '{a.sequence}': {len(clips)} clips, {clips[-1]['end'] / FPS:.2f} s")
     else:
         clips = intervalles(a.derush, meta["duration_seconds"])
     mots = json.loads((a.derush / "words_premiere.json").read_text())
-    plan = json.loads(a.plan.read_text())
     segs = construire_plan(plan, mots, clips)
     total = clips[-1]["end"]
     se, sc = (me["w"], me["h"]), (mc["w"], mc["h"])
@@ -615,15 +651,17 @@ def main():
             n_cles += len(serie)
         else:
             pe = pc = None
-        ie0, ie1 = i0 + off, i1 + off
+        ic0, ic1 = i0 + off_cam, i1 + off_cam
+        ie0, ie1 = ic0 + off, ic1 + off
         nom = f"{lay}{' (transition)' if trans else ''}"
         v_ecran.append(clipitem(f"ecran-{i}", f"{nom} · {a.ecran.name}", F.ref("file-ecran", fe), ie0, ie1, s0, s1,
                                 basic_motion(params(Es, *se), pe, [0, ie0, s0])))
-        v_cam.append(clipitem(f"cam-{i}", f"{nom} · {a.cam.name}", F.ref("file-cam", fc), i0, i1, s0, s1,
-                              basic_motion(params(Cs, *sc), pc, [0, i0, s0])))
+        v_cam.append(clipitem(f"cam-{i}", f"{nom} · {a.cam.name}", F.ref("file-cam", fc), ic0, ic1, s0, s1,
+                              basic_motion(params(Cs, *sc), pc, [0, ic0, s0])))
     for k, c in enumerate(clips):
-        a1.append(clipitem(f"a1-{k}", a.cam.name, F.ref("file-cam", fc), c["in"], c["out"], c["start"], c["end"], "", 1))
-        a2.append(clipitem(f"a2-{k}", a.cam.name, F.ref("file-cam", fc), c["in"], c["out"], c["start"], c["end"], "", 2))
+        ac0, ac1 = c["in"] + off_cam, c["out"] + off_cam
+        a1.append(clipitem(f"a1-{k}", a.cam.name, F.ref("file-cam", fc), ac0, ac1, c["start"], c["end"], "", 1))
+        a2.append(clipitem(f"a2-{k}", a.cam.name, F.ref("file-cam", fc), ac0, ac1, c["start"], c["end"], "", 2))
 
     # frame: during the still shots (± 2 frames), continuous between ECRAN and ZOOM (same cards)
     plages = []
@@ -730,7 +768,7 @@ def main():
         print(f"  overlays: {len(hab_v)} video tracks ({sum(len(x) for x in hab)} elements), "
               f"{len(hab_a)} sound effect tracks")
     if a.apercu:
-        apercu(a, segs, etats, clips, off, se, sc, fond_p, pngs, plages, boucles if anime else None, hab)
+        apercu(a, segs, etats, clips, off, off_cam, se, sc, fond_p, pngs, plages, boucles if anime else None, hab)
 
 
 def habillage(xml_path: Path, total: int):
@@ -770,7 +808,7 @@ def habillage(xml_path: Path, total: int):
     return v_xml, a_xml, clips_v
 
 
-def apercu(a, segs, etats, clips, off, se, sc, fond_p, pngs, plages, boucles, hab=()):
+def apercu(a, segs, etats, clips, off, off_cam, se, sc, fond_p, pngs, plages, boucles, hab=()):
     """Contact sheet: each frame is recomposed FROM THE PREMIERE PARAMETERS
     (crop, scale around the clip center, position), as Premiere would do."""
     from PIL import Image, ImageDraw
@@ -841,7 +879,8 @@ def apercu(a, segs, etats, clips, off, se, sc, fond_p, pngs, plages, boucles, ha
         t = (ci["in"] + f - ci["start"]) / FPS
         E, C, lay, trans = etats(f)
         img = fond_de(f)
-        for src_path, st, (sw, sh), dt in ((a.ecran, E, se, off / FPS), (a.cam, C, sc, 0.0)):
+        for src_path, st, (sw, sh), dt in ((a.ecran, E, se, (off_cam + off) / FPS),
+                                           (a.cam, C, sc, off_cam / FPS)):
             p = params(st, sw, sh)
             raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t + dt:.3f}", "-i", str(src_path),
                                   "-frames:v", "1", "-f", "image2pipe", "-vcodec", "png", "-"],
